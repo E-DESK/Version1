@@ -333,9 +333,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_STDPERIPH_DRIVER,HSE_VALUE=8000000,TM_DISCO_STM32F4_DISCOVERY</Define>
+              <Define>USE_STDPERIPH_DRIVER,HSE_VALUE=8000000,TM_DISCO_STM32F4_DISCOVERY,ARM_MATH_CM4</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Libraries\STM32F4xx_StdPeriph_Driver\inc;..\User;..\Utilities;..\Libraries\CMSIS\Device\ST\STM32F4xx\Include;..\Libraries\CMSIS\Include;..\FATFS;..\TM;..\FATFS\drivers;..\FATFS\option;..\ESP8266;..\FreeRTOS;..\FreeRTOS\Source\include;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\Fuzzy</IncludePath>
+              <IncludePath>..\Libraries\STM32F4xx_StdPeriph_Driver\inc;..\User;..\Utilities;..\Libraries\CMSIS\Device\ST\STM32F4xx\Include;..\Libraries\CMSIS\Include;..\FATFS;..\TM;..\FATFS\drivers;..\FATFS\option;..\ESP8266;..\FreeRTOS;..\FreeRTOS\Source\include;..\FreeRTOS\Source\portable\RVDS\ARM_CM4F;..\Fuzzy;..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include;..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -398,6 +398,46 @@
               <FileName>TFT.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\TFT.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_pid_init_f32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_pid_init_f32.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_pid_init_q15.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_pid_init_q15.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_pid_init_q31.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_pid_init_q31.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_pid_reset_f32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_pid_reset_f32.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_pid_reset_q15.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_pid_reset_q15.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_pid_reset_q31.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_pid_reset_q31.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_sin_cos_f32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_sin_cos_f32.c</FilePath>
+            </File>
+            <File>
+              <FileName>arm_sin_cos_q31.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib\Source\ControllerFunctions\arm_sin_cos_q31.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -703,6 +743,11 @@
               <FileName>tm_stm32f4_adc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\TM\tm_stm32f4_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>tm_stm32f4_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\TM\tm_stm32f4_pwm.c</FilePath>
             </File>
           </Files>
         </Group>

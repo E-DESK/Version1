@@ -12,20 +12,29 @@
  *greater required
  */
 #include "main.h"
-//#include <math.h>
+/*PID*/
+#define PID_PARAM_KP        100         /* Proporcional */
+#define PID_PARAM_KI        0.025       /* Integral */
+#define PID_PARAM_KD        20          /* Derivative */
+#define LIGHT_CURRENT       lights[1]
+#define LIGHT_WANT          lights[0]
+#define LIGHT_WANT_VALUE    100
+float lights[2];
+float lightWantValue = LIGHT_WANT_VALUE;
 /*
 RTOS TASK
-
 */
 #define STACK_SIZE_MIN 128 /* usStackDepth	- the stack size DEFINED IN \
                               WORDS.*/
 uint8_t light;
 /*xTaskHandle*/
-xTaskHandle ptr_ReadSensor;
+xTaskHandle ptr_readSensor;
 xTaskHandle ptr_showLCD;
+xTaskHandle ptr_response;
 /**/
 static void vDA2_ReadSensor(void *pvParameters);
 static void vDA2_ShowLCD   (void *pvParameters);
+static void vDA2_Response  (void *pvParemeters);
 
 /*LCD functions*/
 int mLCD_resetLcd(void);
@@ -50,6 +59,18 @@ USERDATA_TYPE userData;
 
 NOTE userNotes[10];
 int noteIndex=0;
+/*Global PWM PID*/
+/* Timer data for PWM */
+TM_PWM_TIM_t TIM_Data;
+char buf[150];
+uint8_t devices, i, count;
+/* PID error */
+float pid_error;
+/* Duty cycle for PWM */
+float duty = 0;
+float currentDuty =0;
+/* ARM PID Instance, float_32 format */
+arm_pid_instance_f32 PID;
 
 int main() 
 {
@@ -126,15 +147,72 @@ int initMain(int flag)
         InRoomEvn.AnhSang = 0;
         InRoomEvn.DoAmKhi = 0;
         InRoomEvn.DoAmKhi = 0;
+        
+        /*PWM and PID*/
+        if(1)
+        {
+
+        	/* Set PID parameters */
+        /* Set this for your needs */
+        PID.Kp = PID_PARAM_KP;		/* Proporcional */
+        PID.Ki = PID_PARAM_KI;		/* Integral */
+        PID.Kd = PID_PARAM_KD;		/* Derivative */
+
+        /* Initialize PID system, float32_t format */
+        arm_pid_init_f32(&PID, 1);
+            
+        /* Initialize TIM2, 1kHz frequency */
+        TM_PWM_InitTimer(TIM2, &TIM_Data, 1000);
+
+        /* Initialize TIM2, Channel 1, PinsPack 2 = PA5 */
+        TM_PWM_InitChannel(TIM2, TM_PWM_Channel_1, TM_PWM_PinsPack_2);
+
+        /* Set default duty cycle */
+        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
+        }
     }
     return 1;
 }
 
 int initTask()
 {
-    xTaskCreate(vDA2_ReadSensor,(const signed char*)"vDA2_ReadSensor",STACK_SIZE_MIN,NULL,tskIDLE_PRIORITY+2,&ptr_ReadSensor);
+    xTaskCreate(vDA2_ReadSensor,(const signed char*)"vDA2_ReadSensor",STACK_SIZE_MIN,NULL,tskIDLE_PRIORITY+3,&ptr_readSensor);
     xTaskCreate(vDA2_ShowLCD, (const signed char *)"vDA2_ShowLCD", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+1,&ptr_showLCD);
+    xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+1,&ptr_response);
     return 1;
+}
+
+static void vDA2_Response(void *pvParameters)
+{
+    for(;;)
+    {
+        /* Calculate error */
+        LIGHT_CURRENT = InRoomEvn.AnhSang;
+        LIGHT_WANT = lightWantValue;
+        pid_error = LIGHT_CURRENT - LIGHT_WANT;
+
+        /* Calculate PID here, argument is error */
+        /* Output data will be returned, we will use it as duty cycle parameter */
+        currentDuty = duty;
+        duty = arm_pid_f32(&PID, pid_error);
+
+        /* Check overflow, duty cycle in percent */
+        if (duty > 1000) {
+        duty = 1000;
+        } else if (duty < -1000) {
+        duty = -1000;
+        }
+        
+        if(pid_error >= 0)
+        {
+            TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty - duty);
+        }
+        else if(pid_error < 0)
+        {
+            /* Set PWM duty cycle for LED*/
+            TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty + (duty*(-1)));
+        }
+    }
 }
 
 static void vDA2_ReadSensor(void *pvParameters)

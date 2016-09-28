@@ -39,6 +39,10 @@
 #include <stdlib.h>
 #include "tm_stm32f4_disco.h"
 #include "tm_stm32f4_usart.h"
+#include "tm_stm32f4_disco.h"
+#include "tm_stm32f4_usart.h"
+#include "tm_stm32f4_pwm.h"
+
 /*----------  FreeRTOS  ----------*/
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -59,6 +63,9 @@
 #include "tm_stm32f4_adc.h"
 /*=====  End of Include module  ======*/
 #include <math.h>
+#include <stdio.h>
+#include "arm_math.h"
+
 #define __cplusplus
 
 TM_DS1307_Time_t time;

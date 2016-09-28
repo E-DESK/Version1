@@ -45,6 +45,8 @@
 .\objects\main.o: ..\TM\tm_stm32f4_gpio.h
 .\objects\main.o: ..\TM\tm_stm32f4_usart.h
 .\objects\main.o: ..\TM\attributes.h
+.\objects\main.o: ..\TM\tm_stm32f4_pwm.h
+.\objects\main.o: ..\TM\tm_stm32f4_timer_properties.h
 .\objects\main.o: ..\FreeRTOS\Source\include\FreeRTOS.h
 .\objects\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 .\objects\main.o: ..\FreeRTOS\Source\include\projdefs.h
@@ -61,10 +63,11 @@
 .\objects\main.o: ..\Utilities\SSD1289.h
 .\objects\main.o: ..\Utilities\AsciiLib.h
 .\objects\main.o: ..\TM\tm_stm32f4_delay.h
-.\objects\main.o: ..\TM\tm_stm32f4_timer_properties.h
 .\objects\main.o: ..\User\TFT.h
 .\objects\main.o: ..\Utilities\I2C1.h
 .\objects\main.o: ..\Utilities\BH1750.h
 .\objects\main.o: ..\Utilities\DHT11.h
 .\objects\main.o: ..\TM\tm_stm32f4_adc.h
 .\objects\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+.\objects\main.o: ..\Libraries\CMSIS\Include\arm_math.h
+.\objects\main.o: ..\Libraries\CMSIS\Include\core_cm4.h
