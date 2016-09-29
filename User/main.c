@@ -41,24 +41,137 @@ int mLCD_resetLcd(void);
 int mLCD_showTitle(void);
 int mLCD_showDateTime(void);
 int mLCD_showSensor(void);
-char note[100]={0};
+char reminder[100]={0};
 
-typedef struct STRUCT_OF_NOTE
+long getCompare(TM_DS1307_Time_t time)
 {
-    TM_DS1307_Time_t noteTime ;
-    char note[50];
-}NOTE;
+    long temp =0;
+    temp = (time.seconds)&(time.minutes<<2)&(time.hours<<4)&(time.day<<6)
+    &(time.month<<8)&(time.year<<10);
+    return temp;
+}
+/*=============================DEFINE_REMINDER_TYPE===========================*/
+typedef struct STRUCT_OF_REMINDER
+{
+    TM_DS1307_Time_t reminderTime;
+    char reminderText[50];
+}REMINDER;
+/*===============================LINK_LIST_REFERENCES=========================*/
+/*CREATE_LINK_LIST_NODE_AND_DEFINE*/
+struct node
+{
+    REMINDER reminder;
+    struct node *next;
+};
+struct node* head = NULL;
+struct node* current = NULL;
+
+/*INSERT_NEW_NODE*/
+void insertFirst(REMINDER _reminder)
+{
+    //create a link
+    struct node *link = (struct node*) malloc(sizeof(struct node));
+
+    link->reminder = _reminder;
+
+    //point it to old first node
+    link->next = head;
+
+    //point first to new first node
+    head = link;
+}
+/*DELETE_NODE*/
+struct node* deleteFirst()
+{
+   //save reference to first link
+   struct node *tempLink = head;
+
+   //mark next to first link as first 
+   head = head->next;
+
+   //return the deleted link
+   return tempLink;
+}
+/*CHECK_NUMBER_OF_NODE*/
+int length()
+{
+    int lenght =0;
+    struct node * _current;
+    for(_current = head; _current != NULL; _current = current->next)
+    {
+        lenght++;
+    }
+    return lenght;
+}
+
+/*SORT_LIST_OF_NODE*/
+void sortList()
+{
+    int i, j, k; 
+    TM_DS1307_Time_t tempData ;
+    struct node *current;
+    struct node *next;
+
+    int size = length();
+    k = size ;
+
+    for ( i = 0 ; i < size - 1 ; i++, k-- ) {
+      current = head ;
+      next = head->next ;
+        
+      for ( j = 1 ; j < k ; j++ ) {   
+        
+         if ( getCompare(current->reminder.reminderTime) >
+             getCompare(next->reminder.reminderTime)) 
+         {
+             tempData.minutes = current->reminder.reminderTime.minutes;
+             current->reminder.reminderTime.minutes = next->reminder.reminderTime.minutes;
+             next->reminder.reminderTime.minutes = tempData.minutes;
+             
+             tempData.hours = current->reminder.reminderTime.hours;
+             current->reminder.reminderTime.hours = next->reminder.reminderTime.hours;
+             next->reminder.reminderTime.hours = tempData.hours;
+             
+             tempData.day = current->reminder.reminderTime.day;
+             current->reminder.reminderTime.day = next->reminder.reminderTime.day;
+             next->reminder.reminderTime.day = tempData.day;
+             
+             tempData.month = current->reminder.reminderTime.month;
+             current->reminder.reminderTime.month = next->reminder.reminderTime.month;
+             next->reminder.reminderTime.month = tempData.month;
+             
+             tempData.year = current->reminder.reminderTime.year;
+             current->reminder.reminderTime.year = next->reminder.reminderTime.year;
+             next->reminder.reminderTime.year = tempData.year;
+         }
+         current = current->next;
+         next = next->next;
+      }
+    }   
+}
+/*FIND_NEW_NODE_POSITION*/
+/*PRINT_NODE*/
+/*CHECK_LIST_FUNCTIONS*/
+bool isListRemindEmpty()
+{
+   return head == NULL;
+}
+
+/*==============================END_LINK_LIST=================================*/
+/**/
+
+
 
 float getDistance(uint16_t voltaValue);
-NOTE parsingLine(char* inputString);
+REMINDER parsingLine(char* inputString);
 
 Env InRoomEvn;
 USERDATA_TYPE userData;
 
 
 
-NOTE userNotes[10];
-int noteIndex=0;
+REMINDER userNotes[10];
+int reminderIndex=0;
 /*Global PWM PID*/
 /* Timer data for PWM */
 TM_PWM_TIM_t TIM_Data;
@@ -197,21 +310,22 @@ static void vDA2_Response(void *pvParameters)
         duty = arm_pid_f32(&PID, pid_error);
 
         /* Check overflow, duty cycle in percent */
-        if (duty > 1000) {
-        duty = 1000;
-        } else if (duty < -1000) {
-        duty = -1000;
+        if (duty > 100) {
+        duty = 100;
+        } else if (duty < -100) {
+        duty = -100;
         }
-        
+        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
+        /*
         if(pid_error >= 0)
         {
             TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty - duty);
         }
         else if(pid_error < 0)
         {
-            /* Set PWM duty cycle for LED*/
+            //Set PWM duty cycle for LED
             TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty + (duty*(-1)));
-        }
+        }*/
     }
 }
 
@@ -234,18 +348,18 @@ static void vDA2_ReadSensor(void *pvParameters)
         
         if(!TM_USART_BufferEmpty(USART6))
         {
-            TM_USART_Gets(USART6,note,TM_USART6_BUFFER_SIZE);
+            TM_USART_Gets(USART6,reminder,TM_USART6_BUFFER_SIZE);
             TM_USART_ClearBuffer(USART6);
             TM_DISCO_LedToggle(LED_GREEN);
 //            char tempInParse[50];
-//            strcpy(tempInParse,note);
+//            strcpy(tempInParse,reminder);
 //            for(int i=0;i<50;i++)
 //            {
-//                tempInParse[i] = note[i];
+//                tempInParse[i] = reminder[i];
 //            }
-            sprintf(sbuff, "Note:%s",note);
+            sprintf(sbuff, "Note:%s",reminder);
             LCD_StringLine(180, 300, (uint8_t *)sbuff);
-            userNotes[index] = parsingLine(note);
+            userNotes[index] = parsingLine(reminder);
             index++;
             if(index>10)
                 index=0;
@@ -276,8 +390,8 @@ int mLCD_showSensor()
     sprintf(sbuff, "Distance : %0.2f",userData.distance);
     LCD_StringLine(150, 250, (uint8_t *)sbuff);
     
-    //sprintf(sbuff, "Note:%s",note);
-    //sprintf(sbuff,"%d:%d %d-%d-%d %s",userNotes[0].noteTime.hours, userNotes[0].noteTime.minutes ,userNotes[0].noteTime.day, userNotes[0].noteTime.month, userNotes[0].noteTime.year, userNotes[0].note);
+    //sprintf(sbuff, "Note:%s",reminder);
+    //sprintf(sbuff,"%d:%d %d-%d-%d %s",userNotes[0].reminderTime.hours, userNotes[0].reminderTime.minutes ,userNotes[0].reminderTime.day, userNotes[0].reminderTime.month, userNotes[0].reminderTime.year, userNotes[0].reminder);
     //LCD_StringLine(180, 250, (uint8_t *)sbuff);
     return 1;
 }
@@ -344,9 +458,9 @@ float getDistance(uint16_t voltaValue)
     return distance;
 }
 
-//NOTE parsingLine(char* inputString)
+//REMINDER parsingLine(char* inputString)
 //{
-//    NOTE tempNoteType;
+//    REMINDER tempNoteType;
 //    char * pch;
 //    char tempNote[3][32] = {0};
 //    char tempTime1[2][2] = {0};
@@ -371,8 +485,8 @@ float getDistance(uint16_t voltaValue)
 //        pch = strtok(NULL,":-'");
 //        strcpy(tempTime1[1],pch);
 //    }
-//    tempNoteType.noteTime.hours = atoi(tempTime1[0]);
-//    tempNoteType.noteTime.minutes = atoi(tempTime1[1]);
+//    tempNoteType.reminderTime.hours = atoi(tempTime1[0]);
+//    tempNoteType.reminderTime.minutes = atoi(tempTime1[1]);
 //    /*Parsing Day in tempNote[1]*/
 //    /*  tempTime2[0] = (string)day;
 //    *   tempTime2[1] = (string)month;
@@ -387,41 +501,41 @@ float getDistance(uint16_t voltaValue)
 //        pch = strtok(NULL,":-'");
 //        strcpy(tempTime2[2],pch);
 //    }
-//    tempNoteType.noteTime.day = atoi(tempTime2[0]);
-//    tempNoteType.noteTime.month = atoi(tempTime2[1]);
-//    tempNoteType.noteTime.year = atoi(tempTime2[2]);
+//    tempNoteType.reminderTime.day = atoi(tempTime2[0]);
+//    tempNoteType.reminderTime.month = atoi(tempTime2[1]);
+//    tempNoteType.reminderTime.year = atoi(tempTime2[2]);
 //    
-//    /*Parsing text note in tempNote[2]*/
-//    strcpy(tempNoteType.note,tempNote[2]);
+//    /*Parsing text reminder in tempNote[2]*/
+//    strcpy(tempNoteType.reminder,tempNote[2]);
 //    
-//    /*Return to NOTE*/
+//    /*Return to REMINDER*/
 //    pch =NULL;
 //    return tempNoteType;
 //}
 
-NOTE parsingLine(char* inputString)
+REMINDER parsingLine(char* inputString)
 {
-    NOTE tempNoteType;
+    REMINDER tempNoteType;
     char *pch;
     pch = strtok (inputString,":");
     if(pch!=NULL)
     {
-        tempNoteType.noteTime.hours = atoi(pch);
+        tempNoteType.reminderTime.hours = atoi(pch);
         
         pch = strtok (NULL," ");
-        tempNoteType.noteTime.minutes = atoi(pch);
+        tempNoteType.reminderTime.minutes = atoi(pch);
         
         pch = strtok (NULL,"-");
-        tempNoteType.noteTime.day = atoi(pch);
+        tempNoteType.reminderTime.day = atoi(pch);
         
         pch = strtok (NULL,"-");
-        tempNoteType.noteTime.month = atoi(pch);
+        tempNoteType.reminderTime.month = atoi(pch);
         
         pch = strtok (NULL," ");
-        tempNoteType.noteTime.year = atoi(pch);
+        tempNoteType.reminderTime.year = atoi(pch);
         
         pch = strtok (NULL,".");
-        strcpy(tempNoteType.note,pch);
+        strcpy(tempNoteType.reminderText,pch);
         
         free(pch);
     }
