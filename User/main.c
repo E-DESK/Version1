@@ -51,27 +51,50 @@ long getCompare(TM_DS1307_Time_t time)
     &(time.month<<8)&(time.year<<10);
     return temp;
 }
+
+int compareTime(TM_DS1307_Time_t time1, TM_DS1307_Time_t time2)
+{
+	long arr1[2] = { 0 };
+	long arr2[2] = { 0 };
+	arr1[0] = (time1.day) | (time1.month << 8) | (time1.year << 16);
+	arr2[0] = (time2.day) | (time2.month << 8) | (time2.year << 16);
+	if (arr1[0] > arr2[0])
+		return 1;
+	else if (arr1[0] < arr2[0])
+		return -1;
+	else
+	{
+		arr1[1] = (time1.minutes) | (time1.hours << 8);
+		arr2[1] = (time2.minutes) | (time2.hours << 8);
+		if (arr1[1] > arr2[1])
+			return 1;
+		else if (arr1[1] < arr2[1])
+			return -1;
+		else
+			return 0;
+	}
+}
 /*=============================DEFINE_REMINDER_TYPE===========================*/
 typedef struct STRUCT_OF_REMINDER
 {
     TM_DS1307_Time_t reminderTime;
-    char reminderText[50];
-    string a;
+    char *reminderText;
 }REMINDER;
 
-REMINDER newREMINDER(int minute, int hours, int day, int month, int year, char text[])
+REMINDER newREMINDER(int minute, int hours, int day, int month, int year, char *text)
 {
     REMINDER temp;
+    temp.reminderTime.seconds = 0;
     temp.reminderTime.minutes = minute;
     temp.reminderTime.hours = hours;
     temp.reminderTime.day = day;
     temp.reminderTime.month = month;
     temp.reminderTime.year = year;
-    for( int i =0 ; i< 50; i++)
-    {
-        temp.reminderText[i] = text[i];
-    }
-    return temp;
+    temp.reminderText = text;
+    //for (int i = 0; i< 50; i++)
+    //{
+    //	temp.reminderText[i] = text[i];
+    //}
 }
 /*===============================LINK_LIST_REFERENCES=========================*/
 /*CREATE_LINK_LIST_NODE_AND_DEFINE*/
@@ -100,14 +123,16 @@ void insertFirst(REMINDER _reminder)
 /*DELETE_NODE*/
 struct node* deleteFirst()
 {
-   //save reference to first link
-   struct node *tempLink = head;
+    //save reference to first link
+    struct node *tempLink = head;
 
-   //mark next to first link as first 
-   head = head->next;
+    //mark next to first link as first 
+    head = head->next;
 
-   //return the deleted link
-   return tempLink;
+    tempLink->next = NULL;
+
+    //return the deleted link
+    return tempLink;
 }
 /*CHECK_NUMBER_OF_NODE*/
 int length()
@@ -124,46 +149,51 @@ int length()
 /*SORT_LIST_OF_NODE*/
 void sortList()
 {
-    int i, j, k; 
-    TM_DS1307_Time_t tempData ;
+    int i, j, k;
+    REMINDER tempData;
     struct node *current;
     struct node *next;
 
     int size = length();
-    k = size ;
+    k = size;
 
-    for ( i = 0 ; i < size - 1 ; i++, k-- )
+    for (i = 0; i < size - 1; i++, k--)
     {
-      current = head ;
-      next = head->next ;
-      for ( j = 1 ; j < k ; j++ )
-      {
-         if ( getCompare(current->reminder.reminderTime) >
-             getCompare(next->reminder.reminderTime)) 
-         {
-             tempData.minutes = current->reminder.reminderTime.minutes;
-             current->reminder.reminderTime.minutes = next->reminder.reminderTime.minutes;
-             next->reminder.reminderTime.minutes = tempData.minutes;
-             
-             tempData.hours = current->reminder.reminderTime.hours;
-             current->reminder.reminderTime.hours = next->reminder.reminderTime.hours;
-             next->reminder.reminderTime.hours = tempData.hours;
-             
-             tempData.day = current->reminder.reminderTime.day;
-             current->reminder.reminderTime.day = next->reminder.reminderTime.day;
-             next->reminder.reminderTime.day = tempData.day;
-             
-             tempData.month = current->reminder.reminderTime.month;
-             current->reminder.reminderTime.month = next->reminder.reminderTime.month;
-             next->reminder.reminderTime.month = tempData.month;
-             
-             tempData.year = current->reminder.reminderTime.year;
-             current->reminder.reminderTime.year = next->reminder.reminderTime.year;
-             next->reminder.reminderTime.year = tempData.year;
-         }
-         current = current->next;
-         next = next->next;
-      }
+        current = head;
+        long currentCompare;
+        long nextCompare;
+        next = head->next;
+        for (j = 1; j < k; j++)
+        {
+            if (compareTime(current->reminder.reminderTime,next->reminder.reminderTime)==1)
+            {
+                tempData.reminderText = current->reminder.reminderText;
+                current->reminder.reminderText = next->reminder.reminderText;
+                next->reminder.reminderText = tempData.reminderText;
+
+                tempData.reminderTime.minutes = current->reminder.reminderTime.minutes;
+                current->reminder.reminderTime.minutes = next->reminder.reminderTime.minutes;
+                next->reminder.reminderTime.minutes = tempData.reminderTime.minutes;
+
+                tempData.reminderTime.hours = current->reminder.reminderTime.hours;
+                current->reminder.reminderTime.hours = next->reminder.reminderTime.hours;
+                next->reminder.reminderTime.hours = tempData.reminderTime.hours;
+
+                tempData.reminderTime.day = current->reminder.reminderTime.day;
+                current->reminder.reminderTime.day = next->reminder.reminderTime.day;
+                next->reminder.reminderTime.day = tempData.reminderTime.day;
+
+                tempData.reminderTime.month = current->reminder.reminderTime.month;
+                current->reminder.reminderTime.month = next->reminder.reminderTime.month;
+                next->reminder.reminderTime.month = tempData.reminderTime.month;
+
+                tempData.reminderTime.year = current->reminder.reminderTime.year;
+                current->reminder.reminderTime.year = next->reminder.reminderTime.year;
+                next->reminder.reminderTime.year = tempData.reminderTime.year;
+            }
+            current = current->next;
+            next = next->next;
+        }
     }
 }
 /*FIND_NEW_NODE_POSITION*/
@@ -176,9 +206,6 @@ bool isListRemindEmpty()
 
 /*==============================END_LINK_LIST=================================*/
 /**/
-
-
-
 float getDistance(uint16_t voltaValue);
 REMINDER parsingLine(char* inputString);
 
