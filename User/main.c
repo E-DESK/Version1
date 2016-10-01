@@ -12,6 +12,7 @@
  *greater required
  */
 #include "main.h"
+#define __cplusplus
 /*PID*/
 #define PID_PARAM_KP        100         /* Proporcional */
 #define PID_PARAM_KI        0.025       /* Integral */
@@ -55,7 +56,23 @@ typedef struct STRUCT_OF_REMINDER
 {
     TM_DS1307_Time_t reminderTime;
     char reminderText[50];
+    string a;
 }REMINDER;
+
+REMINDER newREMINDER(int minute, int hours, int day, int month, int year, char text[])
+{
+    REMINDER temp;
+    temp.reminderTime.minutes = minute;
+    temp.reminderTime.hours = hours;
+    temp.reminderTime.day = day;
+    temp.reminderTime.month = month;
+    temp.reminderTime.year = year;
+    for( int i =0 ; i< 50; i++)
+    {
+        temp.reminderText[i] = text[i];
+    }
+    return temp;
+}
 /*===============================LINK_LIST_REFERENCES=========================*/
 /*CREATE_LINK_LIST_NODE_AND_DEFINE*/
 struct node
@@ -115,12 +132,12 @@ void sortList()
     int size = length();
     k = size ;
 
-    for ( i = 0 ; i < size - 1 ; i++, k-- ) {
+    for ( i = 0 ; i < size - 1 ; i++, k-- )
+    {
       current = head ;
       next = head->next ;
-        
-      for ( j = 1 ; j < k ; j++ ) {   
-        
+      for ( j = 1 ; j < k ; j++ )
+      {
          if ( getCompare(current->reminder.reminderTime) >
              getCompare(next->reminder.reminderTime)) 
          {
@@ -147,7 +164,7 @@ void sortList()
          current = current->next;
          next = next->next;
       }
-    }   
+    }
 }
 /*FIND_NEW_NODE_POSITION*/
 /*PRINT_NODE*/
@@ -204,6 +221,14 @@ int initMain(int flag)
         TM_DISCO_LedInit();
         TM_DISCO_ButtonInit();
         TM_DELAY_Init();
+        /*TEST SORT LINK LIST*/
+        insertFirst(newREMINDER(12,30,12,10,2016,"an com"));
+        insertFirst(newREMINDER(12,45,12,10,2016,"di tam"));
+        insertFirst(newREMINDER(10,30,12,10,2016,"mua com"));
+        insertFirst(newREMINDER(6,30,12,10,2016,"thuc day"));
+        insertFirst(newREMINDER(7,30,12,10,2016,"di hoc"));
+        insertFirst(newREMINDER(11,30,14,10,2016,"di test"));
+        sortList();
         
         LCD_Init();
 
