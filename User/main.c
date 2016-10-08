@@ -1,16 +1,3 @@
-/**
- *	Keil project for USART using strings
- *
- *  Before you start, select your target, on the right of the "Load" button
- *
- *	@author		Tilen Majerle
- *	@email		tilen@majerle.eu
- *	@website	http://stm32f4-discovery.com
- *	@ide		Keil uVision 5
- *	@packs		STM32F4xx Keil packs version 2.2.0 or greater required
- *	@stdperiph	STM32F4xx Standard peripheral drivers version 1.4.0 or
- *greater required
- */
 #include "main.h"
 #define __cplusplus
 /*PID*/
@@ -19,7 +6,7 @@
 #define PID_PARAM_KD        20          /* Derivative */
 #define LIGHT_CURRENT       lights[1]
 #define LIGHT_WANT          lights[0]
-#define LIGHT_WANT_VALUE    100
+#define LIGHT_WANT_VALUE    150
 float lights[2];
 float lightWantValue = LIGHT_WANT_VALUE;
 /*
@@ -42,12 +29,129 @@ int mLCD_resetLcd(void);
 int mLCD_showTitle(void);
 int mLCD_showDateTime(void);
 int mLCD_showSensor(void);
-char reminder[100]={0};
+//char reminder[100]={0};
+char *reminder;
+
+void TM_TIMER_Init(void) {
+	TIM_TimeBaseInitTypeDef TIM_BaseStruct;
+	
+	/* Enable clock for TIM4 */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+/*	
+	TIM4 is connected to APB1 bus, which has on F407 device 42MHz clock 				
+	But, timer has internal PLL, which double this frequency for timer, up to 84MHz 	
+	Remember: Not each timer is connected to APB1, there are also timers connected 	
+	on APB2, which works at 84MHz by default, and internal PLL increase 				
+	this to up to 168MHz 															
+	
+	Set timer prescaller 
+	Timer count frequency is set with 
+	
+	timer_tick_frequency = Timer_default_frequency / (prescaller_set + 1)		
+	
+	In our case, we want a max frequency for timer, so we set prescaller to 0 		
+	And our timer will have tick frequency		
+	
+	timer_tick_frequency = 84000000 / (0 + 1) = 84000000 
+*/	
+	TIM_BaseStruct.TIM_Prescaler = 0;
+	/* Count up */
+    TIM_BaseStruct.TIM_CounterMode = TIM_CounterMode_Up;
+/*
+	Set timer period when it have reset
+	First you have to know max value for timer
+	In our case it is 16bit = 65535
+	To get your frequency for PWM, equation is simple
+	
+	PWM_frequency = timer_tick_frequency / (TIM_Period + 1)
+	
+	If you know your PWM frequency you want to have timer period set correct
+	
+	TIM_Period = timer_tick_frequency / PWM_frequency - 1
+	
+	In our case, for 10Khz PWM_frequency, set Period to
+	
+	TIM_Period = 84000000 / 10000 - 1 = 8399
+	
+	If you get TIM_Period larger than max timer value (in our case 65535),
+	you have to choose larger prescaler and slow down timer tick frequency
+*/
+    TIM_BaseStruct.TIM_Period = 8399; /* 10kHz PWM */
+    TIM_BaseStruct.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_BaseStruct.TIM_RepetitionCounter = 0;
+	/* Initialize TIM4 */
+    TIM_TimeBaseInit(TIM2, &TIM_BaseStruct);
+	/* Start count on TIM4 */
+    TIM_Cmd(TIM2, ENABLE);
+}
+
+void TM_PWM_Init(void) {
+	TIM_OCInitTypeDef TIM_OCStruct;
+	
+	/* Common settings */
+	
+	/* PWM mode 2 = Clear on compare match */
+	/* PWM mode 1 = Set on compare match */
+	TIM_OCStruct.TIM_OCMode = TIM_OCMode_PWM2;
+	TIM_OCStruct.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCStruct.TIM_OCPolarity = TIM_OCPolarity_Low;
+	
+/*
+	To get proper duty cycle, you have simple equation
+	
+	pulse_length = ((TIM_Period + 1) * DutyCycle) / 100 - 1
+	
+	where DutyCycle is in percent, between 0 and 100%
+	
+	25% duty cycle: 	pulse_length = ((8399 + 1) * 25) / 100 - 1 = 2099
+	50% duty cycle: 	pulse_length = ((8399 + 1) * 50) / 100 - 1 = 4199
+	75% duty cycle: 	pulse_length = ((8399 + 1) * 75) / 100 - 1 = 6299
+	100% duty cycle:	pulse_length = ((8399 + 1) * 100) / 100 - 1 = 8399
+	
+	Remember: if pulse_length is larger than TIM_Period, you will have output HIGH all the time
+*/
+	TIM_OCStruct.TIM_Pulse = 2099; /* 25% duty cycle */
+	TIM_OC1Init(TIM4, &TIM_OCStruct);
+	TIM_OC1PreloadConfig(TIM4, TIM_OCPreload_Enable);
+	
+	TIM_OCStruct.TIM_Pulse = 4199; /* 50% duty cycle */
+	TIM_OC2Init(TIM4, &TIM_OCStruct);
+	TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
+	
+	TIM_OCStruct.TIM_Pulse = 6299; /* 75% duty cycle */
+	TIM_OC3Init(TIM4, &TIM_OCStruct);
+	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
+	
+	TIM_OCStruct.TIM_Pulse = 8399; /* 100% duty cycle */
+	TIM_OC4Init(TIM4, &TIM_OCStruct);
+	TIM_OC4PreloadConfig(TIM4, TIM_OCPreload_Enable);
+}
+
+void TM_LEDS_Init(void) {
+	GPIO_InitTypeDef GPIO_InitStruct;
+	
+	/* Clock for GPIOD */
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
+	/* Alternating functions for pins */
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource5, GPIO_AF_TIM2);
+//	GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_TIM4);
+//	GPIO_PinAFConfig(GPIOD, GPIO_PinSource14, GPIO_AF_TIM4);
+//	GPIO_PinAFConfig(GPIOD, GPIO_PinSource15, GPIO_AF_TIM4);
+	
+	/* Set pins */
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
 
 long getCompare(TM_DS1307_Time_t time)
 {
     long temp =0;
-    temp = (time.seconds)&(time.minutes<<2)&(time.hours<<4)&(time.day<<6)
+    temp = (time.seconds)&(time.minutes<<2)&(time.hours<<4)&(time.date<<6)
     &(time.month<<8)&(time.year<<10);
     return temp;
 }
@@ -56,8 +160,8 @@ int compareTime(TM_DS1307_Time_t time1, TM_DS1307_Time_t time2)
 {
 	long arr1[2] = { 0 };
 	long arr2[2] = { 0 };
-	arr1[0] = (time1.day) | (time1.month << 8) | (time1.year << 16);
-	arr2[0] = (time2.day) | (time2.month << 8) | (time2.year << 16);
+	arr1[0] = (time1.date) | (time1.month << 8) | (time1.year << 16);
+	arr2[0] = (time2.date) | (time2.month << 8) | (time2.year << 16);
 	if (arr1[0] > arr2[0])
 		return 1;
 	else if (arr1[0] < arr2[0])
@@ -81,20 +185,16 @@ typedef struct STRUCT_OF_REMINDER
     char *reminderText;
 }REMINDER;
 
-REMINDER newREMINDER(int minute, int hours, int day, int month, int year, char *text)
+REMINDER newREMINDER(int minute, int hours, int date, int month, int year, char *text)
 {
     REMINDER temp;
     temp.reminderTime.seconds = 0;
     temp.reminderTime.minutes = minute;
     temp.reminderTime.hours = hours;
-    temp.reminderTime.day = day;
+    temp.reminderTime.date = date;
     temp.reminderTime.month = month;
     temp.reminderTime.year = year;
     temp.reminderText = text;
-    //for (int i = 0; i< 50; i++)
-    //{
-    //	temp.reminderText[i] = text[i];
-    //}
 }
 /*===============================LINK_LIST_REFERENCES=========================*/
 /*CREATE_LINK_LIST_NODE_AND_DEFINE*/
@@ -179,9 +279,9 @@ void sortList()
                 current->reminder.reminderTime.hours = next->reminder.reminderTime.hours;
                 next->reminder.reminderTime.hours = tempData.reminderTime.hours;
 
-                tempData.reminderTime.day = current->reminder.reminderTime.day;
-                current->reminder.reminderTime.day = next->reminder.reminderTime.day;
-                next->reminder.reminderTime.day = tempData.reminderTime.day;
+                tempData.reminderTime.date = current->reminder.reminderTime.date;
+                current->reminder.reminderTime.date = next->reminder.reminderTime.date;
+                next->reminder.reminderTime.date = tempData.reminderTime.date;
 
                 tempData.reminderTime.month = current->reminder.reminderTime.month;
                 current->reminder.reminderTime.month = next->reminder.reminderTime.month;
@@ -224,7 +324,7 @@ uint8_t devices, i, count;
 /* PID error */
 float pid_error;
 /* Duty cycle for PWM */
-float duty = 0;
+float duty = 100;
 float currentDuty =0;
 /* ARM PID Instance, float_32 format */
 arm_pid_instance_f32 PID;
@@ -249,13 +349,13 @@ int initMain(int flag)
         TM_DISCO_ButtonInit();
         TM_DELAY_Init();
         /*TEST SORT LINK LIST*/
-        insertFirst(newREMINDER(12,30,12,10,2016,"an com"));
-        insertFirst(newREMINDER(12,45,12,10,2016,"di tam"));
-        insertFirst(newREMINDER(10,30,12,10,2016,"mua com"));
-        insertFirst(newREMINDER(6,30,12,10,2016,"thuc day"));
-        insertFirst(newREMINDER(7,30,12,10,2016,"di hoc"));
-        insertFirst(newREMINDER(11,30,14,10,2016,"di test"));
-        sortList();
+//        insertFirst(newREMINDER(12,30,12,10,2016,"an com"));
+//        insertFirst(newREMINDER(12,45,12,10,2016,"di tam"));
+//        insertFirst(newREMINDER(10,30,12,10,2016,"mua com"));
+//        insertFirst(newREMINDER(6,30,12,10,2016,"thuc day"));
+//        insertFirst(newREMINDER(7,30,12,10,2016,"di hoc"));
+//        insertFirst(newREMINDER(11,30,14,10,2016,"di test"));
+//        sortList();
         
         LCD_Init();
 
@@ -289,12 +389,12 @@ int initMain(int flag)
         {
             /* Set date and time */
             /* Day 7, 26th May 2014, 02:05:00 */
-            time.hours = 16;
+            time.hours = 15;
             time.minutes = 33;
             time.seconds = 20;
-            time.date = 11;
+            time.date = 2;
             time.day = 8;
-            time.month = 9;
+            time.month = 10;
             time.year = 16;
             TM_DS1307_SetDateTime(&time);
 
@@ -317,7 +417,7 @@ int initMain(int flag)
         if(1)
         {
 
-        	/* Set PID parameters */
+        /* Set PID parameters */
         /* Set this for your needs */
         PID.Kp = PID_PARAM_KP;		/* Proporcional */
         PID.Ki = PID_PARAM_KI;		/* Integral */
@@ -327,13 +427,20 @@ int initMain(int flag)
         arm_pid_init_f32(&PID, 1);
             
         /* Initialize TIM2, 1kHz frequency */
-        TM_PWM_InitTimer(TIM2, &TIM_Data, 1000);
+                     /* Init leds */
+        TM_LEDS_Init();
+        /* Init timer */
+        TM_TIMER_Init();
+        /* Init PWM */
+        TM_PWM_Init();
+        TM_PWM_InitTimer(TIM2, &TIM_Data, 10000);
 
         /* Initialize TIM2, Channel 1, PinsPack 2 = PA5 */
         TM_PWM_InitChannel(TIM2, TM_PWM_Channel_1, TM_PWM_PinsPack_2);
 
         /* Set default duty cycle */
         TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
+        //TM_PWM_SetChannelMicros(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         }
     }
     return 1;
@@ -354,18 +461,25 @@ static void vDA2_Response(void *pvParameters)
         /* Calculate error */
         LIGHT_CURRENT = InRoomEvn.AnhSang;
         LIGHT_WANT = lightWantValue;
-        pid_error = LIGHT_CURRENT - LIGHT_WANT;
-
+        pid_error = LIGHT_WANT - LIGHT_CURRENT;
+//        if(LIGHT_CURRENT >= LIGHT_WANT)
+//        {
+//            pid_error = LIGHT_CURRENT - LIGHT_WANT;
+//        }
+//        else if(LIGHT_CURRENT >= LIGHT_WANT)
+//        {
+//            pid_error = LIGHT_WANT - LIGHT_CURRENT;
+//        }
         /* Calculate PID here, argument is error */
         /* Output data will be returned, we will use it as duty cycle parameter */
-        currentDuty = duty;
+        //currentDuty = duty;
         duty = arm_pid_f32(&PID, pid_error);
 
         /* Check overflow, duty cycle in percent */
         if (duty > 100) {
         duty = 100;
-        } else if (duty < -100) {
-        duty = -100;
+        } else if (duty < 0) {
+        duty = 0;
         }
         TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         /*
@@ -378,6 +492,9 @@ static void vDA2_Response(void *pvParameters)
             //Set PWM duty cycle for LED
             TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty + (duty*(-1)));
         }*/
+        TM_DISCO_LedToggle(LED_GREEN);
+        
+        vTaskDelay( 250 / portTICK_RATE_MS );
     }
 }
 
@@ -403,21 +520,25 @@ static void vDA2_ReadSensor(void *pvParameters)
             TM_USART_Gets(USART6,reminder,TM_USART6_BUFFER_SIZE);
             TM_USART_ClearBuffer(USART6);
             TM_DISCO_LedToggle(LED_GREEN);
+            /*In ra LCD truoc roi tinh gi thi tinh*/
+            LCD_SetTextColor(YELLOW);
+            sprintf(sbuff, "Note:%s",reminder);
+            LCD_StringLine(180, 300, (uint8_t *)sbuff);
 //            char tempInParse[50];
 //            strcpy(tempInParse,reminder);
 //            for(int i=0;i<50;i++)
 //            {
 //                tempInParse[i] = reminder[i];
 //            }
-            sprintf(sbuff, "Note:%s",reminder);
-            LCD_StringLine(180, 300, (uint8_t *)sbuff);
-            userNotes[index] = parsingLine(reminder);
-            index++;
-            if(index>10)
-                index=0;
+            //insertFirst(parsingLine(reminder));
+            
+            //LCD_StringLine(180, 300, (uint8_t *)reminder);
+            
+//            userNotes[index] = parsingLine(reminder);
+//            index++;
+//            if(index>10)
+//                index=0;
         }
-        
-
     }
 }
 
@@ -443,7 +564,7 @@ int mLCD_showSensor()
     LCD_StringLine(150, 250, (uint8_t *)sbuff);
     
     //sprintf(sbuff, "Note:%s",reminder);
-    //sprintf(sbuff,"%d:%d %d-%d-%d %s",userNotes[0].reminderTime.hours, userNotes[0].reminderTime.minutes ,userNotes[0].reminderTime.day, userNotes[0].reminderTime.month, userNotes[0].reminderTime.year, userNotes[0].reminder);
+    //sprintf(sbuff,"%d:%d %d-%d-%d %s",userNotes[0].reminderTime.hours, userNotes[0].reminderTime.minutes ,userNotes[0].reminderTime.date, userNotes[0].reminderTime.month, userNotes[0].reminderTime.year, userNotes[0].reminder);
     //LCD_StringLine(180, 250, (uint8_t *)sbuff);
     return 1;
 }
@@ -458,7 +579,7 @@ int mLCD_showDateTime()
     {
         LCD_Clear_P(BLACK, 86, 320, 5120);
         LCD_CharSize(16);
-        sprintf(sbuff, "%s,%d %s %d", date[time.day], time.date, Month[time.month],time.year + 2000);
+        sprintf(sbuff, "%s,%d %s %d", date[time.date], time.date, Month[time.month],time.year + 2000);
         LCD_StringLine(86, 230, (uint8_t *)sbuff);
     }
     return 1;
@@ -476,7 +597,7 @@ int mLCD_resetLcd()
     
     LCD_Clear_P(BLACK, 86, 320, 5120);
     LCD_CharSize(16);
-    sprintf(sbuff, "%s,%d,%s,%d", date[time.day], time.date, Month[time.month],time.year + 2000);
+    sprintf(sbuff, "%s,%d,%s,%d", date[time.date], time.date, Month[time.month],time.year + 2000);
     LCD_StringLine(86, 250, (uint8_t *)sbuff);
 
     
@@ -540,7 +661,7 @@ float getDistance(uint16_t voltaValue)
 //    tempNoteType.reminderTime.hours = atoi(tempTime1[0]);
 //    tempNoteType.reminderTime.minutes = atoi(tempTime1[1]);
 //    /*Parsing Day in tempNote[1]*/
-//    /*  tempTime2[0] = (string)day;
+//    /*  tempTime2[0] = (string)date;
 //    *   tempTime2[1] = (string)month;
 //    *   tempTime2[2] = (string)year;
 //    */
@@ -553,7 +674,7 @@ float getDistance(uint16_t voltaValue)
 //        pch = strtok(NULL,":-'");
 //        strcpy(tempTime2[2],pch);
 //    }
-//    tempNoteType.reminderTime.day = atoi(tempTime2[0]);
+//    tempNoteType.reminderTime.date = atoi(tempTime2[0]);
 //    tempNoteType.reminderTime.month = atoi(tempTime2[1]);
 //    tempNoteType.reminderTime.year = atoi(tempTime2[2]);
 //    
@@ -578,7 +699,7 @@ REMINDER parsingLine(char* inputString)
         tempNoteType.reminderTime.minutes = atoi(pch);
         
         pch = strtok (NULL,"-");
-        tempNoteType.reminderTime.day = atoi(pch);
+        tempNoteType.reminderTime.date = atoi(pch);
         
         pch = strtok (NULL,"-");
         tempNoteType.reminderTime.month = atoi(pch);
