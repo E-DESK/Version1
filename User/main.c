@@ -29,8 +29,22 @@ int mLCD_resetLcd(void);
 int mLCD_showTitle(void);
 int mLCD_showDateTime(void);
 int mLCD_showSensor(void);
-//char reminder[100]={0};
-char *reminder;
+/*REMINDER*/
+#define MAX_STRING_REMINDER 100
+char reminder[MAX_STRING_REMINDER]={0};
+char * p_reminder = reminder;
+int newRemindFlag=0;
+struct node * tmpNext;
+
+
+int clearReminder(char rmd[])
+{
+    for(int i=0; i < MAX_STRING_REMINDER ;i++)
+    {
+        rmd[i] = NULL;
+    }
+    return 1;
+}
 
 void TM_TIMER_Init(void) {
 	TIM_TimeBaseInitTypeDef TIM_BaseStruct;
@@ -182,7 +196,7 @@ int compareTime(TM_DS1307_Time_t time1, TM_DS1307_Time_t time2)
 typedef struct STRUCT_OF_REMINDER
 {
     TM_DS1307_Time_t reminderTime;
-    char *reminderText;
+    char * reminderText;
 }REMINDER;
 
 REMINDER newREMINDER(int minute, int hours, int date, int month, int year, char *text)
@@ -195,6 +209,7 @@ REMINDER newREMINDER(int minute, int hours, int date, int month, int year, char 
     temp.reminderTime.month = month;
     temp.reminderTime.year = year;
     temp.reminderText = text;
+    return temp;
 }
 /*===============================LINK_LIST_REFERENCES=========================*/
 /*CREATE_LINK_LIST_NODE_AND_DEFINE*/
@@ -239,7 +254,7 @@ int length()
 {
     int lenght =0;
     struct node * _current;
-    for(_current = head; _current != NULL; _current = current->next)
+    for(_current = head; _current != NULL; _current = _current->next)
     {
         lenght++;
     }
@@ -260,8 +275,8 @@ void sortList()
     for (i = 0; i < size - 1; i++, k--)
     {
         current = head;
-        long currentCompare;
-        long nextCompare;
+        //long currentCompare;
+        //long nextCompare;
         next = head->next;
         for (j = 1; j < k; j++)
         {
@@ -355,7 +370,7 @@ int initMain(int flag)
 //        insertFirst(newREMINDER(6,30,12,10,2016,"thuc day"));
 //        insertFirst(newREMINDER(7,30,12,10,2016,"di hoc"));
 //        insertFirst(newREMINDER(11,30,14,10,2016,"di test"));
-//        sortList();
+        sortList();
         
         LCD_Init();
 
@@ -433,7 +448,7 @@ int initMain(int flag)
         TM_TIMER_Init();
         /* Init PWM */
         TM_PWM_Init();
-        TM_PWM_InitTimer(TIM2, &TIM_Data, 10000);
+        TM_PWM_InitTimer(TIM2, &TIM_Data, 100000);
 
         /* Initialize TIM2, Channel 1, PinsPack 2 = PA5 */
         TM_PWM_InitChannel(TIM2, TM_PWM_Channel_1, TM_PWM_PinsPack_2);
@@ -442,6 +457,7 @@ int initMain(int flag)
         TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         //TM_PWM_SetChannelMicros(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         }
+        LCD_SetDisplayWindow(0, 0, 239, 319);
     }
     return 1;
 }
@@ -492,7 +508,7 @@ static void vDA2_Response(void *pvParameters)
             //Set PWM duty cycle for LED
             TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty + (duty*(-1)));
         }*/
-        TM_DISCO_LedToggle(LED_GREEN);
+        //TM_DISCO_LedToggle(LED_GREEN);
         
         vTaskDelay( 250 / portTICK_RATE_MS );
     }
@@ -517,27 +533,12 @@ static void vDA2_ReadSensor(void *pvParameters)
         
         if(!TM_USART_BufferEmpty(USART6))
         {
+            newRemindFlag = 1;
+            
+            clearReminder(reminder);
             TM_USART_Gets(USART6,reminder,TM_USART6_BUFFER_SIZE);
             TM_USART_ClearBuffer(USART6);
             TM_DISCO_LedToggle(LED_GREEN);
-            /*In ra LCD truoc roi tinh gi thi tinh*/
-            LCD_SetTextColor(YELLOW);
-            sprintf(sbuff, "Note:%s",reminder);
-            LCD_StringLine(180, 300, (uint8_t *)sbuff);
-//            char tempInParse[50];
-//            strcpy(tempInParse,reminder);
-//            for(int i=0;i<50;i++)
-//            {
-//                tempInParse[i] = reminder[i];
-//            }
-            //insertFirst(parsingLine(reminder));
-            
-            //LCD_StringLine(180, 300, (uint8_t *)reminder);
-            
-//            userNotes[index] = parsingLine(reminder);
-//            index++;
-//            if(index>10)
-//                index=0;
         }
     }
 }
@@ -563,9 +564,40 @@ int mLCD_showSensor()
     sprintf(sbuff, "Distance : %0.2f",userData.distance);
     LCD_StringLine(150, 250, (uint8_t *)sbuff);
     
-    //sprintf(sbuff, "Note:%s",reminder);
+    if(newRemindFlag)
+    {
+        LCD_Clear_P(BLACK, 180, 329-1*8, 10240);
+        sprintf(sbuff, "Lated:%s",reminder);
+        LCD_StringLine(180, 329-2*8, (uint8_t *)sbuff);
+        newRemindFlag =0;
+        insertFirst(parsingLine(reminder));
+        sortList();
+        
+        /*Show first*/
+        LCD_SetTextColor(YELLOW);
+        LCD_Clear_P(BLACK, 204, 329-1*8, 10240);
+        sprintf(sbuff,"%d:%d %d-%d-%d %s",
+        head->reminder.reminderTime.hours,
+        head->reminder.reminderTime.minutes,
+        head->reminder.reminderTime.date, 
+        head->reminder.reminderTime.month,
+        head->reminder.reminderTime.year,
+        head->reminder.reminderText);
+
+        LCD_StringLine(204, 329-2*8, (uint8_t *)sbuff);
+    }
+    
+//    if(tmpNext!=NULL)
+//    {
+//        LCD_Clear_P(BLACK, 180, 329-1*8, 10240);
+//        sprintf(sbuff, "Lated:%s",reminder);
+//        LCD_StringLine(180, 329-2*8, (uint8_t *)sbuff);
+//        newRemindFlag =0;
+//        insertFirst(parsingLine(reminder));
+//    }
     //sprintf(sbuff,"%d:%d %d-%d-%d %s",userNotes[0].reminderTime.hours, userNotes[0].reminderTime.minutes ,userNotes[0].reminderTime.date, userNotes[0].reminderTime.month, userNotes[0].reminderTime.year, userNotes[0].reminder);
-    //LCD_StringLine(180, 250, (uint8_t *)sbuff);
+    
+    //Pixel(215,329-2*8,YELLOW);
     return 1;
 }
 
@@ -685,10 +717,20 @@ float getDistance(uint16_t voltaValue)
 //    pch =NULL;
 //    return tempNoteType;
 //}
+ 
+void copy_string(char *target, char *source) {
+   while (*source) {
+      *target = *source;
+      source++;
+      target++;
+   }
+   *target = '\0';
+}
 
 REMINDER parsingLine(char* inputString)
 {
     REMINDER tempNoteType;
+    tempNoteType.reminderText = NULL;//(char*)malloc(10);
     char *pch;
     pch = strtok (inputString,":");
     if(pch!=NULL)
@@ -708,9 +750,10 @@ REMINDER parsingLine(char* inputString)
         tempNoteType.reminderTime.year = atoi(pch);
         
         pch = strtok (NULL,".");
+        //copy_string(tempNoteType.reminderText,pch);
         strcpy(tempNoteType.reminderText,pch);
         
-        free(pch);
+        //free(tempNoteType.reminderText);
     }
     return tempNoteType;
 }

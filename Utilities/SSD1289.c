@@ -288,6 +288,7 @@ void LCD_PutChar(int16_t PosX, int16_t PosY, char c)
 void LCD_StringLine(uint16_t PosX, uint16_t PosY, uint8_t *str)
 {
 	uint8_t TempChar;
+    int tempPosY = PosY;
 
 	do
 	{
@@ -295,7 +296,7 @@ void LCD_StringLine(uint16_t PosX, uint16_t PosY, uint8_t *str)
 		LCD_PutChar(PosX, PosY, TempChar);
 		if (PosY >asciisize)
 		{
-                  PosY -= (asciisize-8);           
+                  PosY -= (asciisize-8);
                   if(asciisize==24)
                   {
                     PosY-=(asciisize-18);
@@ -306,11 +307,12 @@ void LCD_StringLine(uint16_t PosX, uint16_t PosY, uint8_t *str)
                   }
 		}
                 
-		else if (PosX >asciisize)
+		//else if (PosX > asciisize)
+        else if (PosX < (339 -asciisize))
 		{
                  
-			PosY = 0;
-			PosX -= asciisize;
+			PosY = tempPosY;
+			PosX += asciisize;
 		}
 		else
 		{
