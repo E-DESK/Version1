@@ -68,7 +68,7 @@
 
 #define __cplusplus
 
-TM_DS1307_Time_t time;
+TM_DS1307_Time_t CrTime;
 uint8_t Time_Start = 0;
 int Time_Write = 0;
 uint8_t count24=0;
@@ -100,7 +100,7 @@ typedef struct Environment Env;
 struct UserData_Struct
 {
     float distance;
-    uint16_t time;
+    uint16_t hisTime;
 };
 typedef struct UserData_Struct USERDATA_TYPE;
 

@@ -1,5 +1,7 @@
 #include "main.h"
 #define __cplusplus
+/*Define scope*/
+#define LCD_FUNCs 1
 /*PID*/
 #define PID_PARAM_KP        100         /* Proporcional */
 #define PID_PARAM_KI        0.025       /* Integral */
@@ -15,6 +17,7 @@ RTOS TASK
 #define STACK_SIZE_MIN 128 /* usStackDepth	- the stack size DEFINED IN \
                               WORDS.*/
 uint8_t light;
+
 /*xTaskHandle*/
 xTaskHandle ptr_readSensor;
 xTaskHandle ptr_showLCD;
@@ -25,17 +28,64 @@ static void vDA2_ShowLCD   (void *pvParameters);
 static void vDA2_Response  (void *pvParemeters);
 
 /*LCD functions*/
+
+#define TIMER_X             280
+#define TIMER_Y             25
+#define TIMER_RANGE         100
+#define TIMER_SIZE          24
+#define TIMER_COLOR         GREEN
+
+#define DATE_X              300
+#define DATE_Y              50
+#define DATE_RANGE          100
+#define DATE_SIZE           16
+#define DATE_COLOR          GREEN
+
+#define TITLE_UIT_X         300
+#define TITLE_UIT_Y         5
+#define TITLE_UIT_RANGE     100
+#define TITLE_UIT_SIZE      16
+#define TITLE_UIT_COLOR     BLUE
+
+#define TITLE_CE_X          290
+#define TITLE_CE_Y          45
+#define TITLE_CE_RANGE      100
+#define TITLE_CE_SIZE       100
+#define TITLE_CE_COLOR      BLUE
+
+#define INFO_X              319/3-8
+#define INFO_Y              05
+#define INFO_RANGE          100
+#define INFO_SIZE           100
+#define INFO_COLOR          RED
+#define INFO_BACKGOURND     BLACK
+
+#define LATED_X              317-8
+#define LATED_Y              137
+#define LATED_RANGE          100
+#define LATED_SIZE           100
+#define LATED_COLOR          RED
+#define LATED_BACKGOURND     BLACK
+
+#define NOTE_X              LATED_X+1
+#define NOTE_Y              LATED_Y+12
+#define NOTE_RANGE          10240
+#define NOTE_SIZE           16
+#define NOTE_COLOR          BLUE
+#define NOTE_BACKGOURND     BLACK
+
 int mLCD_resetLcd(void);
 int mLCD_showTitle(void);
 int mLCD_showDateTime(void);
+int mLCD_showDate(void);
 int mLCD_showSensor(void);
+int mLCD_ShowListRemind(void);
 /*REMINDER*/
 #define MAX_STRING_REMINDER 100
 char reminder[MAX_STRING_REMINDER]={0};
 char * p_reminder = reminder;
 int newRemindFlag=0;
 struct node * tmpNext;
-
 
 int clearReminder(char rmd[])
 {
@@ -193,6 +243,7 @@ int compareTime(TM_DS1307_Time_t time1, TM_DS1307_Time_t time2)
 	}
 }
 /*=============================DEFINE_REMINDER_TYPE===========================*/
+#if 1 
 typedef struct STRUCT_OF_REMINDER
 {
     TM_DS1307_Time_t reminderTime;
@@ -261,6 +312,19 @@ int length()
     return lenght;
 }
 
+uint8_t Alarm()
+{
+    if((head->reminder.reminderTime.date == CrTime.date)
+    &&(head->reminder.reminderTime.month == CrTime.month)
+    &&(head->reminder.reminderTime.year == CrTime.year)
+    &&(head->reminder.reminderTime.hours == CrTime.hours)
+    &&(head->reminder.reminderTime.minutes == CrTime.minutes + 30))
+    {
+        return 1;
+    }
+    return 0;
+}
+
 /*SORT_LIST_OF_NODE*/
 void sortList()
 {
@@ -321,6 +385,8 @@ bool isListRemindEmpty()
 
 /*==============================END_LINK_LIST=================================*/
 /**/
+#endif /*LINK LIST*/
+
 float getDistance(uint16_t voltaValue);
 REMINDER parsingLine(char* inputString);
 
@@ -359,6 +425,7 @@ int initMain(int flag)
     if(flag)
     {
         SystemInit();
+        NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
 
         TM_DISCO_LedInit();
         TM_DISCO_ButtonInit();
@@ -385,10 +452,6 @@ int initMain(int flag)
         /*ADC: Pin_A0 (ADC1 channel 0)*/
         TM_ADC_Init(ADC1,ADC_Channel_0);
 
-        mLCD_resetLcd();
-        LCD_Clear(BLACK);
-        mLCD_showTitle();
-        
         TM_USART_Init(USART6, TM_USART_PinsPack_1, 9600);
         TM_USART_SetCustomStringEndCharacter(USART6,'.');
         
@@ -400,18 +463,18 @@ int initMain(int flag)
             TM_DISCO_LedOn(LED_ALL);
         }
             
-        if(1)
+#if 0 /*Setting datetime*/
         {
             /* Set date and time */
             /* Day 7, 26th May 2014, 02:05:00 */
-            time.hours = 15;
-            time.minutes = 33;
-            time.seconds = 20;
-            time.date = 2;
-            time.day = 8;
-            time.month = 10;
-            time.year = 16;
-            TM_DS1307_SetDateTime(&time);
+            CrTime.hours = 21;
+            CrTime.minutes = 18;
+            CrTime.seconds = 20;
+            CrTime.date = 12;
+            CrTime.day = 4;
+            CrTime.month = 10;
+            CrTime.year = 16;
+            TM_DS1307_SetDateTime(&CrTime);
 
             /* Disable output first */
             TM_DS1307_DisableOutputPin();
@@ -420,13 +483,19 @@ int initMain(int flag)
             TM_DS1307_EnableOutputPin(TM_DS1307_OutputFrequency_4096Hz);
         }
         
-        TM_DS1307_GetDateTime(&time);
-            
-        mLCD_resetLcd();
         
+#endif /*END DATETIME SETTING*/
+        TM_DS1307_GetDateTime(&CrTime);
+        CrTime.year += 2000;
+        //mLCD_resetLcd();
+        mLCD_showDate();
+        
+        LCD_Clear(YELLOW);
+        mLCD_showTitle();
         InRoomEvn.AnhSang = 0;
         InRoomEvn.DoAmKhi = 0;
         InRoomEvn.DoAmKhi = 0;
+
         
         /*PWM and PID*/
         if(1)
@@ -457,7 +526,7 @@ int initMain(int flag)
         TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         //TM_PWM_SetChannelMicros(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         }
-        LCD_SetDisplayWindow(0, 0, 239, 319);
+        LCD_SetDisplayWindow(0, 0, 238, 318);
     }
     return 1;
 }
@@ -465,8 +534,8 @@ int initMain(int flag)
 int initTask()
 {
     xTaskCreate(vDA2_ReadSensor,(const signed char*)"vDA2_ReadSensor",STACK_SIZE_MIN,NULL,tskIDLE_PRIORITY+3,&ptr_readSensor);
-    xTaskCreate(vDA2_ShowLCD, (const signed char *)"vDA2_ShowLCD", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+1,&ptr_showLCD);
-    xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+1,&ptr_response);
+    xTaskCreate(vDA2_ShowLCD, (const signed char *)"vDA2_ShowLCD", STACK_SIZE_MIN+384,NULL, tskIDLE_PRIORITY+1,&ptr_showLCD);
+    xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+2,&ptr_response);
     return 1;
 }
 
@@ -510,7 +579,7 @@ static void vDA2_Response(void *pvParameters)
         }*/
         //TM_DISCO_LedToggle(LED_GREEN);
         
-        vTaskDelay( 250 / portTICK_RATE_MS );
+        vTaskDelay( 100 / portTICK_RATE_MS );
     }
 }
 
@@ -519,8 +588,6 @@ static void vDA2_ReadSensor(void *pvParameters)
     for(;;)
     {
         vTaskDelay( 250 / portTICK_RATE_MS );
-        
-        int index =0;
         DHT_GetTemHumi();
         InRoomEvn.AnhSang = BH1750_Read();
         InRoomEvn.DoAmKhi = DHT_doam();
@@ -528,17 +595,13 @@ static void vDA2_ReadSensor(void *pvParameters)
         
         userData.distance = getDistance(TM_ADC_Read(ADC1,ADC_Channel_0));
         
-        TM_DS1307_GetDateTime(&time);
+        TM_DS1307_GetDateTime(&CrTime);
+        CrTime.year+=2000;
         TM_DISCO_LedToggle(LED_ORANGE);
         
         if(!TM_USART_BufferEmpty(USART6))
         {
             newRemindFlag = 1;
-            
-            clearReminder(reminder);
-            TM_USART_Gets(USART6,reminder,TM_USART6_BUFFER_SIZE);
-            TM_USART_ClearBuffer(USART6);
-            TM_DISCO_LedToggle(LED_GREEN);
         }
     }
 }
@@ -552,108 +615,7 @@ static void vDA2_ShowLCD(void *pvParameters)
         mLCD_showDateTime();
     }
 }
-    
-int mLCD_showSensor()
-{
-    LCD_CharSize(16);
-    LCD_SetTextColor(RED);
-    //LCD_Clear_P(WHITE, 110, 240, 5120);
-    sprintf(sbuff, "%d*C , %02d lux , %02d humi   ",InRoomEvn.NhietDo,InRoomEvn.AnhSang,InRoomEvn.DoAmKhi);
-    LCD_StringLine(110, 250, (uint8_t *)sbuff);
-    
-    sprintf(sbuff, "Distance : %0.2f",userData.distance);
-    LCD_StringLine(150, 250, (uint8_t *)sbuff);
-    
-    if(newRemindFlag)
-    {
-        LCD_Clear_P(BLACK, 180, 329-1*8, 10240);
-        sprintf(sbuff, "Lated:%s",reminder);
-        LCD_StringLine(180, 329-2*8, (uint8_t *)sbuff);
-        newRemindFlag =0;
-        insertFirst(parsingLine(reminder));
-        sortList();
-        
-        /*Show first*/
-        LCD_SetTextColor(YELLOW);
-        LCD_Clear_P(BLACK, 204, 329-1*8, 10240);
-        sprintf(sbuff,"%d:%d %d-%d-%d %s",
-        head->reminder.reminderTime.hours,
-        head->reminder.reminderTime.minutes,
-        head->reminder.reminderTime.date, 
-        head->reminder.reminderTime.month,
-        head->reminder.reminderTime.year,
-        head->reminder.reminderText);
 
-        LCD_StringLine(204, 329-2*8, (uint8_t *)sbuff);
-    }
-    
-//    if(tmpNext!=NULL)
-//    {
-//        LCD_Clear_P(BLACK, 180, 329-1*8, 10240);
-//        sprintf(sbuff, "Lated:%s",reminder);
-//        LCD_StringLine(180, 329-2*8, (uint8_t *)sbuff);
-//        newRemindFlag =0;
-//        insertFirst(parsingLine(reminder));
-//    }
-    //sprintf(sbuff,"%d:%d %d-%d-%d %s",userNotes[0].reminderTime.hours, userNotes[0].reminderTime.minutes ,userNotes[0].reminderTime.date, userNotes[0].reminderTime.month, userNotes[0].reminderTime.year, userNotes[0].reminder);
-    
-    //Pixel(215,329-2*8,YELLOW);
-    return 1;
-}
-
-int mLCD_showDateTime()
-{
-    LCD_SetTextColor(GREEN);
-    LCD_CharSize(24);
-    sprintf(sbuff, "%02d:%02d:%02d", time.hours, time.minutes, time.seconds);
-    LCD_StringLine(62, 235, (uint8_t *)sbuff);
-    if (time.hours == 0 && time.minutes == 00 && time.seconds == 0)
-    {
-        LCD_Clear_P(BLACK, 86, 320, 5120);
-        LCD_CharSize(16);
-        sprintf(sbuff, "%s,%d %s %d", date[time.date], time.date, Month[time.month],time.year + 2000);
-        LCD_StringLine(86, 230, (uint8_t *)sbuff);
-    }
-    return 1;
-}
-
-int mLCD_resetLcd()
-{
-
-    TM_DS1307_GetDateTime(&time);
-    
-    LCD_SetTextColor(GREEN);
-    LCD_CharSize(24);
-    sprintf(sbuff, "%02d:%02d:%02d", time.hours, time.minutes, time.seconds);
-    LCD_StringLine(62, 235, (uint8_t *)sbuff);
-    
-    LCD_Clear_P(BLACK, 86, 320, 5120);
-    LCD_CharSize(16);
-    sprintf(sbuff, "%s,%d,%s,%d", date[time.date], time.date, Month[time.month],time.year + 2000);
-    LCD_StringLine(86, 250, (uint8_t *)sbuff);
-
-    
-    LCD_CharSize(16);
-    LCD_SetTextColor(RED);
-    sprintf(sbuff, "%d*C , %02d lux , %02d humi",InRoomEvn.NhietDo,InRoomEvn.AnhSang,InRoomEvn.DoAmKhi);
-    LCD_StringLine(110, 250, (uint8_t *)sbuff);
-    /*Reset color*/
-    LCD_SetTextColor(WHITE);
-    return 1;
-}
-
-int mLCD_showTitle()
-{
-    LCD_Clear_P(BLACK,14,320,8960);
-    LCD_SetBackColor(BLACK);
-    LCD_SetTextColor(BLUE);
-    LCD_CharSize(16);
-    LCD_StringLine(14,290,(unsigned char*)"UNIVERSITY OF INFOMATION TECHNOLOGY");
-    LCD_StringLine(28,275,(unsigned char*)"FACULTY OF COMPUTER ENGINEERING");
-    /*LCD_SetTextColor(RED);
-    LCD_StringLine(42,180,(unsigned char*)"E_DESK");*/
-    return 1;
-}
 
 float getDistance(uint16_t voltaValue)
 {
@@ -663,63 +625,10 @@ float getDistance(uint16_t voltaValue)
     return distance;
 }
 
-//REMINDER parsingLine(char* inputString)
-//{
-//    REMINDER tempNoteType;
-//    char * pch;
-//    char tempNote[3][32] = {0};
-//    char tempTime1[2][2] = {0};
-//    char tempTime2[3][4] = {0};
-//    pch = strtok (inputString," ");
-//    if(pch!=NULL)
-//    {
-//        strcpy(tempNote[0],pch);
-//        pch = strtok (NULL," ");
-//        strcpy(tempNote[1],pch);
-//        pch = strtok (NULL,".");
-//        strcpy(tempNote[2],pch);
-//    }
-//    /*Parsing Time hour in tempNote[0]*/
-//    /*  tempTime1[0] = (string)hour;
-//    *   tempTime1[1] = (string)minutes;
-//    */
-//    pch = strtok(tempNote[0],":-'");
-//    if(pch!=NULL)
-//    {
-//        strcpy(tempTime1[0],pch);
-//        pch = strtok(NULL,":-'");
-//        strcpy(tempTime1[1],pch);
-//    }
-//    tempNoteType.reminderTime.hours = atoi(tempTime1[0]);
-//    tempNoteType.reminderTime.minutes = atoi(tempTime1[1]);
-//    /*Parsing Day in tempNote[1]*/
-//    /*  tempTime2[0] = (string)date;
-//    *   tempTime2[1] = (string)month;
-//    *   tempTime2[2] = (string)year;
-//    */
-//    pch = strtok(tempNote[1],":-'");
-//    if(pch!=NULL)
-//    {
-//        strcpy(tempTime2[0],pch);
-//        pch = strtok(NULL,":-'");
-//        strcpy(tempTime2[1],pch);
-//        pch = strtok(NULL,":-'");
-//        strcpy(tempTime2[2],pch);
-//    }
-//    tempNoteType.reminderTime.date = atoi(tempTime2[0]);
-//    tempNoteType.reminderTime.month = atoi(tempTime2[1]);
-//    tempNoteType.reminderTime.year = atoi(tempTime2[2]);
-//    
-//    /*Parsing text reminder in tempNote[2]*/
-//    strcpy(tempNoteType.reminder,tempNote[2]);
-//    
-//    /*Return to REMINDER*/
-//    pch =NULL;
-//    return tempNoteType;
-//}
- 
-void copy_string(char *target, char *source) {
-   while (*source) {
+void copy_string(char *target, char *source)
+{
+   while (*source)
+   {
       *target = *source;
       source++;
       target++;
@@ -727,10 +636,21 @@ void copy_string(char *target, char *source) {
    *target = '\0';
 }
 
+uint8_t getSizeOfString(char *string)
+{
+    uint8_t size=0;
+    while(*string)
+    {
+        size++;
+        string++;
+    }
+    return size;
+}
+
 REMINDER parsingLine(char* inputString)
 {
     REMINDER tempNoteType;
-    tempNoteType.reminderText = NULL;//(char*)malloc(10);
+    
     char *pch;
     pch = strtok (inputString,":");
     if(pch!=NULL)
@@ -750,14 +670,222 @@ REMINDER parsingLine(char* inputString)
         tempNoteType.reminderTime.year = atoi(pch);
         
         pch = strtok (NULL,".");
+        int a = getSizeOfString(pch);
+        tempNoteType.reminderText = (char*)malloc(a);
         //copy_string(tempNoteType.reminderText,pch);
+        
         strcpy(tempNoteType.reminderText,pch);
         
         //free(tempNoteType.reminderText);
     }
     return tempNoteType;
 }
+#if LCD_FUNCs
+/*LCD FUNCTIONS*/
+int mLCD_RS()
+{
+    LCD_SetBackColor(BLACK);
+    LCD_SetTextColor(WHITE);
+    LCD_CharSize(8);
+    return 1;
+}
 
+int mLCD_writeLine(uint16_t posY, uint16_t posX, int range, uint16_t color, uint16_t backgournd,uint8_t size,char* string)
+{
+    //LCD_Clear_P(BLACK,14,320,8960);
+    LCD_SetBackColor(backgournd);
+    LCD_SetTextColor(color);
+    LCD_CharSize(size);
+    LCD_StringLine(posY,posX,(unsigned char*)string);
+}
+
+int mLCD_showSensor()
+{
+    LCD_SetBackColor(INFO_BACKGOURND);
+    LCD_SetTextColor(INFO_COLOR);
+    LCD_CharSize(16);
+    //LCD_Clear_P(WHITE, 110, 240, 5120);
+    
+    
+    sprintf(sbuff, "Temp: %5.0d",InRoomEvn.NhietDo);
+    LCD_StringLine(INFO_Y+16, INFO_X, (uint8_t *)sbuff);
+
+    sprintf(sbuff, "Light:%5.0d",InRoomEvn.AnhSang);
+    LCD_StringLine(INFO_Y+32, INFO_X, (uint8_t *)sbuff);
+    
+    sprintf(sbuff, "Humi: %5.0d",InRoomEvn.DoAmKhi);
+    LCD_StringLine(INFO_Y+48, INFO_X, (uint8_t *)sbuff);
+    
+    sprintf(sbuff, "Dist: %5.2f",userData.distance);
+    LCD_StringLine(INFO_Y+64, INFO_X, (uint8_t *)sbuff);
+    
+    sprintf(sbuff, "ST/D: %5.2f",userData.distance);
+    LCD_StringLine(INFO_Y+80, INFO_X, (uint8_t *)sbuff);
+    
+    sprintf(sbuff, "ST/S: %5.2f",userData.distance);
+    LCD_StringLine(INFO_Y+96, INFO_X, (uint8_t *)sbuff);
+    
+    mLCD_RS();
+    if(newRemindFlag)
+    {
+        //LCD_Clear_P(BLACK, 150, 329-1*8, 10240);
+        /*New*/
+        clearReminder(reminder);
+        TM_USART_Gets(USART6,reminder,TM_USART6_BUFFER_SIZE);
+        TM_USART_ClearBuffer(USART6);
+
+        /*Parsing*/
+        insertFirst(parsingLine(reminder));
+        
+        if(compareTime(head->reminder.reminderTime,CrTime) == 1)/*If new OK ?*/
+        {
+            /*Send ok*/
+            TM_USART_Puts(USART6, "OK!\r\n");
+            /*Show*/
+            LCD_SetBackColor(INFO_BACKGOURND);
+            LCD_SetTextColor(NOTE_COLOR);
+            /*LATED*/
+            LCD_SetColors(DGRAY,BLACK);
+            LCD_CharSize(12);
+            LCD_Clear_P(BLACK,LATED_Y,LATED_X - 60,3040);
+            sprintf(sbuff,"<%d:%d %d-%d-%d>%s",
+            head->reminder.reminderTime.hours,
+            head->reminder.reminderTime.minutes,
+            head->reminder.reminderTime.date, 
+            head->reminder.reminderTime.month,
+            head->reminder.reminderTime.year,
+            head->reminder.reminderText);
+            LCD_StringLineNotEndLine(LATED_Y,LATED_X -48,(uint8_t *)sbuff);
+            /*Sort*/
+            sortList();
+            /*Show list*/
+            mLCD_ShowListRemind();
+        }
+        else
+        {
+            TM_DISCO_LedToggle(LED_GREEN);
+            /*Send Not OK,show*/
+            LCD_Clear_P(BLACK,LATED_Y,LATED_X - 60,3040);
+            LCD_SetColors(DGRAY,BLACK);
+            LCD_CharSize(12);
+            sprintf(sbuff, "%s","Not valid!!!!");
+            LCD_StringLineNotEndLine(LATED_Y,LATED_X-48, (uint8_t *)sbuff);
+            
+            TM_USART_Puts(USART6, "NOT OK, NOTE TIME < TIME!\r\n");
+            /*Delete*/
+            deleteFirst();
+        }
+        
+        
+        
+        
+        newRemindFlag =0;
+        
+    }
+    return 1;
+}
+
+int mLCD_ShowListRemind()
+{
+    /*Show first*/
+    struct node * _current;
+    _current = head;
+    LCD_SetTextColor(NOTE_COLOR);
+    LCD_CharSize(NOTE_SIZE);
+    LCD_Clear_P(BLACK,NOTE_Y,NOTE_X- 40, 3768);
+    LCD_Clear_P(BLACK,NOTE_Y+12,NOTE_X+8, 3840);
+    sprintf(sbuff,"<%d:%d %d-%d-%d> %s",
+    _current->reminder.reminderTime.hours,
+    _current->reminder.reminderTime.minutes,
+    _current->reminder.reminderTime.date, 
+    _current->reminder.reminderTime.month,
+    _current->reminder.reminderTime.year,
+    _current->reminder.reminderText);
+    
+    LCD_StringLine(NOTE_Y,NOTE_X-48, (uint8_t *)sbuff);
+    
+    //LCD_Clear_P(BLACK,NOTE_Y+32,NOTE_X-8, 15360);
+    _current=_current->next;
+    for(int i = 2; (i < 5)&&(_current!=NULL);i++,_current=_current->next)
+    {
+        LCD_SetTextColor(MAGENTA);
+        LCD_CharSize(12);
+        
+        sprintf(sbuff,"<%02d:%02d %02d-%02d-%02d> %s",
+        _current->reminder.reminderTime.hours,
+        _current->reminder.reminderTime.minutes,
+        _current->reminder.reminderTime.date, 
+        _current->reminder.reminderTime.month,
+        _current->reminder.reminderTime.year,
+        _current->reminder.reminderText);
+        LCD_Clear_P(BLACK,NOTE_Y+(i*16),NOTE_X, 3840);
+        LCD_StringLineNotEndLine(NOTE_Y+(i*16),NOTE_X, (uint8_t *)sbuff);
+    }
+    sprintf(sbuff,"%02d",length());
+    LCD_StringLine(239/2+1,60,(uint8_t *)sbuff);
+    return 1;
+}
+
+int mLCD_showDate()
+{
+    //LCD_Clear_P(BLACK, 86, 320, 5120);
+    LCD_SetTextColor(DATE_COLOR);
+    LCD_CharSize(DATE_SIZE);
+    sprintf(sbuff, "%s,%d,%s,%d", date[CrTime.day], CrTime.date, Month[CrTime.month],CrTime.year);
+    LCD_StringLine(DATE_Y,DATE_X, (uint8_t *)sbuff);
+    mLCD_RS();
+    return 1;
+}
+
+int mLCD_showDateTime()
+{
+    LCD_SetTextColor(GREEN);
+    LCD_CharSize(24);
+    sprintf(sbuff, "%02d:%02d:%02d", CrTime.hours, CrTime.minutes, CrTime.seconds);
+    LCD_StringLine(TIMER_Y, TIMER_X, (uint8_t *)sbuff);
+    if (CrTime.hours == 0 && CrTime.minutes == 00 && CrTime.seconds == 0)
+    {
+         mLCD_showDate();
+    }
+    return 1;
+}
+
+int mLCD_showTitle()
+{
+    mLCD_RS();
+    mLCD_writeLine(TITLE_UIT_Y,TITLE_UIT_X,TITLE_UIT_RANGE,TITLE_UIT_COLOR,BLACK,TITLE_UIT_SIZE,"UIT-COMPUTER ENGINEERING");
+    mLCD_RS();
+    /*LCD_SetTextColor(RED);
+    LCD_StringLine(42,180,(unsigned char*)"E_DESK");*/
+    mLCD_showDate();
+    LCD_SetTextColor(RED);
+    LCD_CharSize(16);
+    LCD_DrawRect(0,0,239,319);
+    
+    //LCD_StringLine(INFO_Y, INFO_X, (uint8_t *)sbuff);
+    LCD_SetTextColor(RED);
+    LCD_DrawRect(0+1,0+1,239/2-2,319/3);
+    LCD_DrawRect(0+1,107,117,211);
+    LCD_DrawRect(0+1,107,70,211);
+    LCD_DrawLine(18,0+1,319/3,LCD_DIR_HORIZONTAL);
+    LCD_StringLine(0+2,319/3-22,(uint8_t *)"INFO DATA");
+    
+
+    LCD_DrawRect(118,1,120,317);
+    LCD_DrawRect(118,1,18,317);
+    LCD_DrawRect(118,1,18,150);
+    //LCD_DrawLine(239/2+18,0+1,319-1,LCD_DIR_HORIZONTAL);
+    LCD_StringLine(239/2+1,250,(uint8_t *)"NOTE");
+    LCD_StringLine(239/2+1,140,(uint8_t *)"Number:");
+    
+    LCD_CharSize(12);
+    LCD_SetColors(GREEN,BLACK);
+    LCD_StringLine(LATED_Y, LATED_X, (uint8_t *)"LATED:");
+    LCD_StringLine(LATED_Y+12, LATED_X, (uint8_t *)"NOTES:");
+    mLCD_RS();
+    return 1;
+}
+#endif
 
 #ifdef USE_FULL_ASSERT
 /**

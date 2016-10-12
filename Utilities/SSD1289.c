@@ -163,25 +163,24 @@ void LCD_PutChar(int16_t PosX, int16_t PosY, char c)
   uint8_t i = 0;
   uint8_t j = 0;
 	if (c != '\n'){
-  if(asciisize==8)
+    if(asciisize==8)
   {
   uint8_t  Buffer[8];
   uint8_t TmpChar = 0;
-  if(c=='\n')
-		PosY=PosY-8;
+  
     GetASCIICode1(Buffer,c);
 	for (i=0;i<8;i++)
 	{
 		TmpChar = Buffer[i];
 		for (j=0;j<8;j++)
 		{
-			if ( ((TmpChar >> (j)) & 0x01) == 0x01)
+			if ( ((TmpChar >> (7-j)) & 0x01) == 0x01)
 			{
-      Pixel(PosX + i, PosY + j, TextColor); 
+                  Pixel(PosX +j, PosY + i, TextColor); 
 			}
 			else
 			{
-			Pixel(PosX + i , PosY + j, BackColor);
+			Pixel(PosX + j, PosY + i, BackColor);
 			}
 		}
 	}
@@ -288,7 +287,7 @@ void LCD_PutChar(int16_t PosX, int16_t PosY, char c)
 void LCD_StringLine(uint16_t PosX, uint16_t PosY, uint8_t *str)
 {
 	uint8_t TempChar;
-    int tempPosY = PosY;
+    int tempPosY = 310;//PosY;
 
 	do
 	{
@@ -322,6 +321,40 @@ void LCD_StringLine(uint16_t PosX, uint16_t PosY, uint8_t *str)
 	}
 	while (*str != 0);
 }
+void LCD_StringLineNotEndLine(uint16_t PosX, uint16_t PosY, uint8_t *str)
+{
+	uint8_t TempChar;
+	do
+	{
+		TempChar = *str++;
+		LCD_PutChar(PosX, PosY, TempChar);
+		if (PosY >asciisize)
+		{
+                  PosY -= (asciisize-8);
+                  if(asciisize==24)
+                  {
+                    PosY-=(asciisize-18);
+                  }
+                  else if(asciisize==12)
+                  {
+                   PosY-=(asciisize-8);
+                  }
+		}
+                
+		//else if (PosX > asciisize)
+        else if (PosX < (339 -asciisize))
+		{
+                 
+			break;
+		}
+		else
+		{
+			PosX = 224;
+			PosY = 304;
+		}
+	}
+	while ((*str != 0));
+}
 void LCD_Println(uint8_t *str)
 {	if(X_ofs<=asciisize)
 	{
@@ -336,7 +369,7 @@ void LCD_DrawLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length, uint8_t Directi
   uint32_t i = 0;
   
   LCD_SetCursor(Xpos, Ypos);
-  if(Direction == LCD_DIR_HORIZONTAL)
+  if(Direction == LCD_DIR_VERTICAL)
   {
     LCD_WriteGRAM(); /* Prepare to write GRAM */
     for(i = 0; i < Length; i++)
@@ -350,7 +383,7 @@ void LCD_DrawLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length, uint8_t Directi
     {
       LCD_WriteGRAM(); /* Prepare to write GRAM */
       LCD_WriteRAM(TextColor);
-      Xpos++;
+      Ypos++;
       LCD_SetCursor(Xpos, Ypos);
     }
   }

@@ -1,6 +1,6 @@
 Dependencies for Project 'MAIN_BOARD', Target 'STM32F407': (DO NOT MODIFY !)
-F (..\User\main.c)(0x57FBD093)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I ..\User -I ..\Utilities -I ..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I ..\Libraries\CMSIS\Include -I ..\FATFS -I ..\TM -I ..\FATFS\drivers -I ..\FATFS\option -I ..\ESP8266 -I ..\FreeRTOS -I ..\FreeRTOS\Source\include -I ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F -I ..\Fuzzy -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F407xx -DUSE_STDPERIPH_DRIVER -DHSE_VALUE="8000000" -DTM_DISCO_STM32F4_DISCOVERY -DARM_MATH_CM4 --C99-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
-I (..\User\main.h)(0x57EF3131)
+F (..\User\main.c)(0x57FE5F31)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I ..\User -I ..\Utilities -I ..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I ..\Libraries\CMSIS\Include -I ..\FATFS -I ..\TM -I ..\FATFS\drivers -I ..\FATFS\option -I ..\ESP8266 -I ..\FreeRTOS -I ..\FreeRTOS\Source\include -I ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F -I ..\Fuzzy -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F407xx -DUSE_STDPERIPH_DRIVER -DHSE_VALUE="8000000" -DTM_DISCO_STM32F4_DISCOVERY -DARM_MATH_CM4 --C99-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
+I (..\User\main.h)(0x57FE49AA)
 I (..\Libraries\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h)(0x57EF3119)
 I (..\Libraries\CMSIS\Include\core_cm4.h)(0x57EF311A)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x574E4C36)
@@ -60,7 +60,7 @@ I (..\FreeRTOS\Source\include\list.h)(0x57EF3119)
 I (..\FreeRTOS\Source\include\croutine.h)(0x57EF3119)
 I (..\TM\tm_stm32f4_ds1307.h)(0x57EF311C)
 I (..\TM\tm_stm32f4_i2c.h)(0x57EF311C)
-I (..\Utilities\SSD1289.h)(0x57FBC653)
+I (..\Utilities\SSD1289.h)(0x57FD0D04)
 I (..\Utilities\AsciiLib.h)(0x57EF311C)
 I (..\TM\tm_stm32f4_delay.h)(0x57EF311C)
 I (..\User\TFT.h)(0x57EF311C)
@@ -70,7 +70,7 @@ I (..\Utilities\DHT11.h)(0x57EF311C)
 I (..\TM\tm_stm32f4_adc.h)(0x57EF311C)
 I (C:\Keil_v5\ARM\ARMCC\include\math.h)(0x574E4C36)
 I (..\Libraries\CMSIS\Include\arm_math.h)(0x57EF311A)
-F (..\User\stm32f4xx_it.c)(0x57EF311C)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I ..\User -I ..\Utilities -I ..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I ..\Libraries\CMSIS\Include -I ..\FATFS -I ..\TM -I ..\FATFS\drivers -I ..\FATFS\option -I ..\ESP8266 -I ..\FreeRTOS -I ..\FreeRTOS\Source\include -I ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F -I ..\Fuzzy -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F407xx -DUSE_STDPERIPH_DRIVER -DHSE_VALUE="8000000" -DTM_DISCO_STM32F4_DISCOVERY -DARM_MATH_CM4 --C99-o .\objects\stm32f4xx_it.o --omf_browse .\objects\stm32f4xx_it.crf --depend .\objects\stm32f4xx_it.d)
+F (..\User\stm32f4xx_it.c)(0x57FE592B)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I ..\User -I ..\Utilities -I ..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I ..\Libraries\CMSIS\Include -I ..\FATFS -I ..\TM -I ..\FATFS\drivers -I ..\FATFS\option -I ..\ESP8266 -I ..\FreeRTOS -I ..\FreeRTOS\Source\include -I ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F -I ..\Fuzzy -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F407xx -DUSE_STDPERIPH_DRIVER -DHSE_VALUE="8000000" -DTM_DISCO_STM32F4_DISCOVERY -DARM_MATH_CM4 --C99-o .\objects\stm32f4xx_it.o --omf_browse .\objects\stm32f4xx_it.crf --depend .\objects\stm32f4xx_it.d)
 I (..\User\stm32f4xx_it.h)(0x57EF311C)
 I (..\Libraries\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h)(0x57EF3119)
 I (..\Libraries\CMSIS\Include\core_cm4.h)(0x57EF311A)
@@ -200,7 +200,7 @@ I (..\FreeRTOS\Source\include\list.h)(0x57EF3119)
 I (..\FreeRTOS\Source\include\croutine.h)(0x57EF3119)
 I (..\TM\tm_stm32f4_ds1307.h)(0x57EF311C)
 I (..\TM\tm_stm32f4_i2c.h)(0x57EF311C)
-I (..\Utilities\SSD1289.h)(0x57FBC653)
+I (..\Utilities\SSD1289.h)(0x57FD0D04)
 I (..\Utilities\AsciiLib.h)(0x57EF311C)
 I (..\TM\tm_stm32f4_delay.h)(0x57EF311C)
 I (..\TM\tm_stm32f4_timer_properties.h)(0x57EF311C)
@@ -1470,13 +1470,13 @@ I (..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_can.h)(0x57EF311C)
 I (..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_dac.h)(0x57EF311C)
 I (..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_dcmi.h)(0x57EF311C)
 I (..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_fsmc.h)(0x57EF311C)
-F (..\Libraries\CMSIS\Device\ST\STM32F4xx\Source\Templates\arm\startup_stm32f40_41xxx.s)(0x57EF3119)(--cpu Cortex-M4.fp -g --apcs=interwork --pd "__MICROLIB SETA 1"-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 521" --pd "STM32F407xx SETA 1"--list .\listings\startup_stm32f40_41xxx.lst --xref -o .\objects\startup_stm32f40_41xxx.o --depend .\objects\startup_stm32f40_41xxx.d)
+F (..\Libraries\CMSIS\Device\ST\STM32F4xx\Source\Templates\arm\startup_stm32f40_41xxx.s)(0x57FE5930)(--cpu Cortex-M4.fp -g --apcs=interwork --pd "__MICROLIB SETA 1"-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 521" --pd "STM32F407xx SETA 1"--list .\listings\startup_stm32f40_41xxx.lst --xref -o .\objects\startup_stm32f40_41xxx.o --depend .\objects\startup_stm32f40_41xxx.d)
 F (..\Utilities\AsciiLib.c)(0x57EF311C)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I ..\User -I ..\Utilities -I ..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I ..\Libraries\CMSIS\Include -I ..\FATFS -I ..\TM -I ..\FATFS\drivers -I ..\FATFS\option -I ..\ESP8266 -I ..\FreeRTOS -I ..\FreeRTOS\Source\include -I ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F -I ..\Fuzzy -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F407xx -DUSE_STDPERIPH_DRIVER -DHSE_VALUE="8000000" -DTM_DISCO_STM32F4_DISCOVERY -DARM_MATH_CM4 --C99-o .\objects\asciilib.o --omf_browse .\objects\asciilib.crf --depend .\objects\asciilib.d)
 I (..\Utilities\AsciiLib.h)(0x57EF311C)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x574E4C36)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x574E4C36)
-F (..\Utilities\SSD1289.c)(0x57F9BD4C)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I ..\User -I ..\Utilities -I ..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I ..\Libraries\CMSIS\Include -I ..\FATFS -I ..\TM -I ..\FATFS\drivers -I ..\FATFS\option -I ..\ESP8266 -I ..\FreeRTOS -I ..\FreeRTOS\Source\include -I ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F -I ..\Fuzzy -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F407xx -DUSE_STDPERIPH_DRIVER -DHSE_VALUE="8000000" -DTM_DISCO_STM32F4_DISCOVERY -DARM_MATH_CM4 --C99-o .\objects\ssd1289.o --omf_browse .\objects\ssd1289.crf --depend .\objects\ssd1289.d)
-I (..\Utilities\SSD1289.h)(0x57FBC653)
+F (..\Utilities\SSD1289.c)(0x57FD1231)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\Libraries\STM32F4xx_StdPeriph_Driver\inc -I ..\User -I ..\Utilities -I ..\Libraries\CMSIS\Device\ST\STM32F4xx\Include -I ..\Libraries\CMSIS\Include -I ..\FATFS -I ..\TM -I ..\FATFS\drivers -I ..\FATFS\option -I ..\ESP8266 -I ..\FreeRTOS -I ..\FreeRTOS\Source\include -I ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F -I ..\Fuzzy -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\Include -I ..\Libraries\00-STM32F4xx_STANDARD_PERIPHERAL_DRIVERS\CMSIS\DSP_Lib-IF:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\RTE-IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-IC:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="521" -DSTM32F407xx -DUSE_STDPERIPH_DRIVER -DHSE_VALUE="8000000" -DTM_DISCO_STM32F4_DISCOVERY -DARM_MATH_CM4 --C99-o .\objects\ssd1289.o --omf_browse .\objects\ssd1289.crf --depend .\objects\ssd1289.d)
+I (..\Utilities\SSD1289.h)(0x57FD0D04)
 I (..\Libraries\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h)(0x57EF3119)
 I (..\Libraries\CMSIS\Include\core_cm4.h)(0x57EF311A)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x574E4C36)
