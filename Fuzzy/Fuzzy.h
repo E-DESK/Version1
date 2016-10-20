@@ -49,35 +49,21 @@ Center-of-gravity is used for defuzzification.
 //using namespace std;
 /************************************************************************************/
 
-enum OUTPUT_
+enum OUTPUT5_
 {
-	RT,
-	T,
-	V,
-	C,
-	RC
+	RT_5,
+	T_5,
+	V_5,
+	C_5,
+	RC_5
+};
+enum OUTPUT3_
+{
+	T_3,
+	V_3,
+	C_3,
 };
 static int LWF_Fuzzy[72] = {
-	RC,RC,V,T,
-	RC,C,T,T,
-	RC,RC,V,T,
-	RC,C,T,T,
-	RC,RC,V,T,
-	RC,RC,T,T,
-
-	RC,RC,V,V,
-	V,V,RT,RT,
-	RC,RC,V,V,
-	V,V,RT,RT,
-	RC,RC,V,V,
-	V,V,RT,RT,
-
-	RC,RC,RT,RT,
-	C,V,RT,RT,
-	RC,RC,T,RT,
-	C,V,RT,RT,
-	RC,RC,T,RT,
-	C,V,RT,RT
 };
 
 
@@ -94,31 +80,30 @@ typedef struct out_mem {
 } OUT_MEM;
 
 
-typedef struct fuz_sys_lwf {
-	IN_MEM  *tem_mem;        /* Groups all fuzzy system parameters in a single variable. */
-	IN_MEM  *hum_mem;
-	IN_MEM  *presdown_mem;
-	IN_MEM  *rateDay_mem;
-	IN_MEM  *rateYear_mem;
-
+typedef struct fuz_sys_2 {
+	IN_MEM  *in_mem1;        /* Groups all fuzzy system parameters in a single variable. */
+	IN_MEM  *in_mem2;
 	OUT_MEM *out_mem;
-	
-} FUZ_SYS_LWF;
+} FUZ_SYS_2;
 
-/************************************************************************************/
-/* Function Prototypes: */
-void fuzzy_init_lwf(FUZ_SYS_LWF *fuzzy_system_lwf);
-void fuzzy_free(FUZ_SYS_LWF *fuzzy_system_lwf);
-float fuzzy_control_lwf(float tem,float hum,float presDown,float rateYear,float rateDay,FUZ_SYS_LWF *fuzzy_system_lwf);
+/*============================================================================*/
+/*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\FUNCTION PROTOTYPES*/
+/*============================================================================*/
+/* Memory locate*/
+void    fuzzy_init_2    (FUZ_SYS_2 *fuzzy_system_2);
+void    fuzzy_free_2      (FUZ_SYS_2 *fuzzy_system_2);
+/*Fuzzy control*/
+float   fuzzy_control_2 (float vInMem1,float vInMem2,FUZ_SYS_2 *fuzzy_system_2);
+/*Defuzzy*/
+float   inf_defuzz_2    (IN_MEM *in_mem1, IN_MEM *in_mem2, OUT_MEM *out_mem);
+void    findMaxMin_2    (const IN_MEM *in_mem1,const IN_MEM *in_mem2);
+/*internal functions*/
 int fuzzyify_three(float u, IN_MEM *mem);
 int fuzzyify_two(float u, IN_MEM *mem);
 float leftall(float u, float w, float c);
 float rightall(float u, float w, float c);
 float triangle(float u, float w, float c);
-float inf_defuzz_lwf2(IN_MEM *tem_mem, IN_MEM *hum_mem, IN_MEM *presDown_mem, IN_MEM *rateYear_mem, IN_MEM *rateDay_mem, OUT_MEM *out_mem);
-float percentMonth(float month);
-float percentDay(float hour);
-void findMaxMin(const IN_MEM *tem_mem,const IN_MEM *hum_mem,const IN_MEM *presDown_mem,const IN_MEM *rateYear_mem,const IN_MEM *rateDay_mem,OUT_MEM *out_mem);
-/************************************************************************************/
-
+/*============================================================================*/
+/*/////////////////////////////////////////////////////////FUNCTION PROTOTYPES*/
+/*============================================================================*/
 #endif /*_FUZZY_H*/

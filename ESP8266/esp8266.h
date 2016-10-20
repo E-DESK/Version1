@@ -26,15 +26,15 @@
 
 #define IP        "184.106.153.149"
 #define PORT      80
-#define USART     USART1
-#define PINPACK   TM_USART_PinsPack_2
-#define BAUDRATE 	9600
-#define SIDD			"HQD"
-#define PASS			"emkhongbiet"
+#define ESP_USART     USART2
+#define ESP_PINPACK   TM_USART_PinsPack_1
+#define ESP_BAUDRATE 	9600
+#define SIDD			"TIDAT"
+#define PASS			"12345678"
 #define APIKEY		"ZFWTJEXVLTYQKI6J&"
 int sendEsp(char* ip, uint32_t port,char* apiKey,char* fieldx,uint8_t data);
 int setEsp(USART_TypeDef* USARTx, TM_USART_PinsPack_t pinspack, uint32_t baudrate);
-int senddata(NRF_ThoiTiet NRF);
+//int senddata(Env _env);
 int connectWifi(char*sidd ,char* passWifi);
 int connect(void);
 int sendEspPre(char* ip, uint32_t port,char apiKey[],char fieldx[],long data);

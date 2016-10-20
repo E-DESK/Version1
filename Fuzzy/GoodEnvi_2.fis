@@ -1,0 +1,49 @@
+[System]
+Name='GoodEnvi_2'
+Type='sugeno'
+Version=2.0
+NumInputs=2
+NumOutputs=1
+NumRules=9
+AndMethod='prod'
+OrMethod='probor'
+ImpMethod='prod'
+AggMethod='sum'
+DefuzzMethod='wtaver'
+
+[Input1]
+Name='NhietDo'
+Range=[18 24]
+NumMFs=3
+MF1='Lanh':'trimf',[-100 18 21]
+MF2='Vua':'trimf',[18 21 24]
+MF3='Nong':'trimf',[21 24 1000]
+
+[Input2]
+Name='AnhSang'
+Range=[0 2000]
+NumMFs=3
+MF1='Toi':'trimf',[-10000 0 1000]
+MF2='Vua':'trimf',[0 1000 2000]
+MF3='Sang':'trimf',[1000 2000 10000]
+
+[Output1]
+Name='DoCanBang'
+Range=[0 1]
+NumMFs=5
+MF1='':'constant',[0.5]
+MF2='':'constant',[25]
+MF3='NOTOK':'constant',[0]
+MF4='OK':'constant',[0.5]
+MF5='GREAT':'constant',[1]
+
+[Rules]
+1 1, 1 (1) : 1
+1 2, 2 (1) : 1
+1 3, 1 (1) : 1
+2 1, 2 (1) : 1
+2 2, 3 (1) : 1
+2 3, 2 (1) : 1
+3 1, 1 (1) : 1
+3 2, 2 (1) : 1
+3 3, 1 (1) : 1

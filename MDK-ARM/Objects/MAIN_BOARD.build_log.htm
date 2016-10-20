@@ -22,18 +22,18 @@ Dialog DLL:      TCM.DLL V1.14.14.0
  
 <h2>Project:</h2>
 F:\TIDAT_Study\NCKH2015\EDESK\Version1\MDK-ARM\MAIN_BOARD.uvprojx
-Project File Date:  10/01/2016
+Project File Date:  10/20/2016
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 3 (build 300)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'STM32F407'
 compiling main.c...
-..\User\main.c(700): warning:  #940-D: missing return statement at end of non-void function "mLCD_writeLine"
-  }
+..\User\main.c(586): warning:  #177-D: function "vDA2_Response" was declared but never referenced
+  static void vDA2_Response(void *pvParameters)
 ..\User\main.c: 1 warning, 0 errors
 linking...
 .\Objects\MAIN_BOARD.axf: Warning: L6304W: Duplicate input file .\objects\system_stm32f4xx_1.o ignored.
-Program Size: Code=36352 RO-data=11172 RW-data=564 ZI-data=82228  
+Program Size: Code=36636 RO-data=11168 RW-data=568 ZI-data=82272  
 Finished: 0 information, 1 warning and 0 error messages.
 FromELF: creating hex file...
 ".\Objects\MAIN_BOARD.axf" - 0 Error(s), 2 Warning(s).
@@ -43,7 +43,7 @@ FromELF: creating hex file...
   C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.9.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include
 
 <h2>Collection of Component Files used:</h2>
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>

@@ -179,7 +179,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGTARM</Key>
-          <Name>(1010=827,126,1247,683,1)(1007=-1,-1,-1,-1,0)(1008=-1,-1,-1,-1,0)(1009=-1,-1,-1,-1,0)(1012=135,169,610,483,0)</Name>
+          <Name>(1010=827,126,1247,683,0)(1007=-1,-1,-1,-1,0)(1008=-1,-1,-1,-1,0)(1009=-1,-1,-1,-1,0)(1012=135,169,610,483,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -214,67 +214,32 @@
           <WinNumber>1</WinNumber>
           <ItemText>head</ItemText>
         </Ww>
+        <Ww>
+          <count>2</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>time</ItemText>
+        </Ww>
+        <Ww>
+          <count>3</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>time1</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
           <count>0</count>
           <WinNumber>2</WinNumber>
-          <ItemText>out_mem-&gt;dom[1]</ItemText>
+          <ItemText>time1</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>2</WinNumber>
-          <ItemText>outDOM</ItemText>
+          <ItemText>time2</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>2</WinNumber>
-          <ItemText>out_mem</ItemText>
-        </Ww>
-        <Ww>
-          <count>3</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>outDOM</ItemText>
-        </Ww>
-        <Ww>
-          <count>4</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>out_mem-&gt;dom</ItemText>
-        </Ww>
-        <Ww>
-          <count>5</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>mem-&gt;dom[1]</ItemText>
-        </Ww>
-        <Ww>
-          <count>6</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>outDOM</ItemText>
-        </Ww>
-        <Ww>
-          <count>7</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>status</ItemText>
-        </Ww>
-        <Ww>
-          <count>8</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>out_mem-&gt;dom[i]</ItemText>
-        </Ww>
-        <Ww>
-          <count>9</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>out_mem</ItemText>
-        </Ww>
-        <Ww>
-          <count>10</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>Atot</ItemText>
-        </Ww>
-        <Ww>
-          <count>11</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>out_mem-&gt;dom[1]</ItemText>
+          <ItemText>CrTime</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
@@ -353,7 +318,7 @@
 
   <Group>
     <GroupName>USER</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -909,7 +874,7 @@
 
   <Group>
     <GroupName>CMSIS</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -929,7 +894,7 @@
 
   <Group>
     <GroupName>MDK-ARM</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -949,7 +914,7 @@
 
   <Group>
     <GroupName>Utilities</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1017,7 +982,7 @@
 
   <Group>
     <GroupName>FATFS</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1073,7 +1038,7 @@
 
   <Group>
     <GroupName>TM</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1225,7 +1190,7 @@
 
   <Group>
     <GroupName>ESP8266</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1245,7 +1210,7 @@
 
   <Group>
     <GroupName>FreeRTOS</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1337,7 +1302,7 @@
 
   <Group>
     <GroupName>Forecast</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1357,7 +1322,7 @@
 
   <Group>
     <GroupName>nrf024l01</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

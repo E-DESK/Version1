@@ -61,6 +61,10 @@
 #include "DHT11.h"
 /*----------  ADC  ----------*/
 #include "tm_stm32f4_adc.h"
+/*----------  ESP  ----------*/
+#include "esp8266.h"
+/*----------  FUZZY  ----------*/
+//#include "fuzzy.h"
 /*=====  End of Include module  ======*/
 #include <math.h>
 #include <stdio.h>
@@ -95,12 +99,16 @@ struct Environment
 	uint32_t AnhSang;
 	uint8_t DoAmKhi;
 };
-typedef struct Environment Env;
+typedef struct Environment ENVIRONMENT_TYPE;
 
 struct UserData_Struct
 {
-    float distance;
-    uint16_t hisTime;
+    float               uD_distance;
+    uint16_t            uD_hisTime_Con;
+    uint16_t            uD_hisTime_Day;
+    uint8_t             uD_isSitting;
+    TM_DS1307_Time_t    uD_StartTime;
+    uint8_t             uD_restFlag;
 };
 typedef struct UserData_Struct USERDATA_TYPE;
 
@@ -120,7 +128,6 @@ float pushPresDownArray(float pushValue);
 uint8_t LCD_showDateTime(uint8_t mode);
 int LCD_showUpdate(int mode);
 int mLCD_storeChuoi(void);
-
 #endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -68,6 +68,13 @@
 .\objects\main.o: ..\Utilities\BH1750.h
 .\objects\main.o: ..\Utilities\DHT11.h
 .\objects\main.o: ..\TM\tm_stm32f4_adc.h
+.\objects\main.o: ..\ESP8266\esp8266.h
+.\objects\main.o: ..\FATFS\diskio.h
+.\objects\main.o: ..\FATFS\ff.h
+.\objects\main.o: ..\FATFS\ffconf.h
+.\objects\main.o: ..\Utilities\nrf24l01.h
+.\objects\main.o: ..\TM\tm_stm32f4_nrf24l01.h
+.\objects\main.o: ..\TM\tm_stm32f4_spi.h
 .\objects\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
 .\objects\main.o: ..\Libraries\CMSIS\Include\arm_math.h
 .\objects\main.o: ..\Libraries\CMSIS\Include\core_cm4.h

@@ -3,9 +3,9 @@
 /*Define scope*/
 #define LCD_FUNCs 1
 /*PID*/
-#define PID_PARAM_KP        100         /* Proporcional */
-#define PID_PARAM_KI        0.025       /* Integral */
-#define PID_PARAM_KD        20          /* Derivative */
+#define PID_PARAM_KP        1         /* Proporcional */
+#define PID_PARAM_KI        10       /* Integral */
+#define PID_PARAM_KD        0          /* Derivative */
 #define LIGHT_CURRENT       lights[1]
 #define LIGHT_WANT          lights[0]
 #define LIGHT_WANT_VALUE    150
@@ -53,7 +53,7 @@ static void vDA2_Response  (void *pvParemeters);
 #define TITLE_CE_SIZE       100
 #define TITLE_CE_COLOR      BLUE
 
-#define INFO_X              319/3-8
+#define INFO_X              97
 #define INFO_Y              05
 #define INFO_RANGE          100
 #define INFO_SIZE           100
@@ -74,18 +74,39 @@ static void vDA2_Response  (void *pvParemeters);
 #define NOTE_COLOR          BLUE
 #define NOTE_BACKGOURND     BLACK
 
+#define ADV_X               300
+#define ADV_Y               90
+#define ADV_RANGE          10240
+#define ADV_SIZE           16
+#define ADV_COLOR          BLUE
+#define ADV_BACKGOURND     BLACK
+
+#define ADV_Hour_Con        2      /*Thời gian thích hợp ngồi liên tục*/
+#define ADV_Hour_Day        480       /*Thời gian làm việc 1 ngày*/
+#define ADV_DISTANCE        20
+#define ADV_TAKE_REST       "TAKE A REST, PLS" 
+#define ADV_HAPPY           "WHAT A HAPPY DAY" 
+#define ADV_TOO_HARD        "STOP AND GO OUT." 
+
+
 int mLCD_resetLcd(void);
 int mLCD_showTitle(void);
 int mLCD_showDateTime(void);
 int mLCD_showDate(void);
 int mLCD_showSensor(void);
 int mLCD_ShowListRemind(void);
+int mLCD_RS(void);
 /*REMINDER*/
 #define MAX_STRING_REMINDER 100
 char reminder[MAX_STRING_REMINDER]={0};
 char * p_reminder = reminder;
 int newRemindFlag=0;
 struct node * tmpNext;
+
+int tempMinutes = 0;
+int countMinutes =0;
+
+int i=0;
 
 int clearReminder(char rmd[])
 {
@@ -147,6 +168,20 @@ void TM_TIMER_Init(void) {
     TIM_TimeBaseInit(TIM2, &TIM_BaseStruct);
 	/* Start count on TIM4 */
     TIM_Cmd(TIM2, ENABLE);
+}
+
+
+int senddata(ENVIRONMENT_TYPE _env)
+{
+  sendEsp(IP, PORT, APIKEY, "field1=", _env.AnhSang);
+	vTaskDelay(3000 / portTICK_RATE_MS);
+  //Delayms(3000);
+  sendEsp(IP, PORT, APIKEY, "field2=", _env.DoAmKhi);
+	vTaskDelay(3000 / portTICK_RATE_MS);
+  //Delayms(3000);
+  sendEspPre(IP, PORT, APIKEY, "field3=", _env.NhietDo);
+	vTaskDelay(3000 / portTICK_RATE_MS);
+  return 1;
 }
 
 void TM_PWM_Init(void) {
@@ -390,7 +425,7 @@ bool isListRemindEmpty()
 float getDistance(uint16_t voltaValue);
 REMINDER parsingLine(char* inputString);
 
-Env InRoomEvn;
+ENVIRONMENT_TYPE InRoomEvn;
 USERDATA_TYPE userData;
 
 
@@ -401,7 +436,7 @@ int reminderIndex=0;
 /* Timer data for PWM */
 TM_PWM_TIM_t TIM_Data;
 char buf[150];
-uint8_t devices, i, count;
+uint8_t devices, count;
 /* PID error */
 float pid_error;
 /* Duty cycle for PWM */
@@ -452,7 +487,8 @@ int initMain(int flag)
         /*ADC: Pin_A0 (ADC1 channel 0)*/
         TM_ADC_Init(ADC1,ADC_Channel_0);
 
-        TM_USART_Init(USART6, TM_USART_PinsPack_1, 9600);
+        TM_USART_Init(USART6, TM_USART_PinsPack_1, 100);
+        //TM_USART_Init(USART2, TM_USART_PinsPack_2, 9600);
         TM_USART_SetCustomStringEndCharacter(USART6,'.');
         
         /*I2C2_PINS PACK 1
@@ -463,15 +499,15 @@ int initMain(int flag)
             TM_DISCO_LedOn(LED_ALL);
         }
             
-#if 0 /*Setting datetime*/
+#if 1 /*Setting datetime*/
         {
             /* Set date and time */
             /* Day 7, 26th May 2014, 02:05:00 */
-            CrTime.hours = 21;
-            CrTime.minutes = 18;
-            CrTime.seconds = 20;
-            CrTime.date = 12;
-            CrTime.day = 4;
+            CrTime.hours = 16;
+            CrTime.minutes = 15;
+            CrTime.seconds = 00;
+            CrTime.date = 15;
+            CrTime.day = 7;
             CrTime.month = 10;
             CrTime.year = 16;
             TM_DS1307_SetDateTime(&CrTime);
@@ -490,7 +526,7 @@ int initMain(int flag)
         //mLCD_resetLcd();
         mLCD_showDate();
         
-        LCD_Clear(YELLOW);
+        LCD_Clear(BLACK);
         mLCD_showTitle();
         InRoomEvn.AnhSang = 0;
         InRoomEvn.DoAmKhi = 0;
@@ -512,21 +548,29 @@ int initMain(int flag)
             
         /* Initialize TIM2, 1kHz frequency */
                      /* Init leds */
-        TM_LEDS_Init();
+        //TM_LEDS_Init();
         /* Init timer */
-        TM_TIMER_Init();
+        //TM_TIMER_Init();
         /* Init PWM */
-        TM_PWM_Init();
-        TM_PWM_InitTimer(TIM2, &TIM_Data, 100000);
+        //TM_PWM_Init();
+        TM_PWM_InitTimer(TIM2, &TIM_Data, 8399);
 
         /* Initialize TIM2, Channel 1, PinsPack 2 = PA5 */
         TM_PWM_InitChannel(TIM2, TM_PWM_Channel_1, TM_PWM_PinsPack_2);
 
         /* Set default duty cycle */
-        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
+        TM_PWM_SetChannelPercent(TIM1, &TIM_Data, TM_PWM_Channel_1, duty);
         //TM_PWM_SetChannelMicros(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         }
+        
+        userData.uD_distance = 0;
+        userData.uD_hisTime_Con =0;
+        userData.uD_hisTime_Day =0;
+        userData.uD_isSitting =0;
+        
         LCD_SetDisplayWindow(0, 0, 238, 318);
+        
+        //setEsp(ESP_USART,ESP_PINPACK,ESP_BAUDRATE);
     }
     return 1;
 }
@@ -535,52 +579,111 @@ int initTask()
 {
     xTaskCreate(vDA2_ReadSensor,(const signed char*)"vDA2_ReadSensor",STACK_SIZE_MIN,NULL,tskIDLE_PRIORITY+3,&ptr_readSensor);
     xTaskCreate(vDA2_ShowLCD, (const signed char *)"vDA2_ShowLCD", STACK_SIZE_MIN+384,NULL, tskIDLE_PRIORITY+1,&ptr_showLCD);
-    xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+2,&ptr_response);
+    //xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+2,&ptr_response);
     return 1;
 }
 
 static void vDA2_Response(void *pvParameters)
 {
+    int tempSecond = CrTime.seconds;
     for(;;)
     {
+/*====================================================================================================================*/
+/*                                                             PID                                                    */
+/*====================================================================================================================*/
         /* Calculate error */
         LIGHT_CURRENT = InRoomEvn.AnhSang;
         LIGHT_WANT = lightWantValue;
         pid_error = LIGHT_WANT - LIGHT_CURRENT;
-//        if(LIGHT_CURRENT >= LIGHT_WANT)
+//        int pastDuty = duty;
+//        if(pid_error >=0)
 //        {
-//            pid_error = LIGHT_CURRENT - LIGHT_WANT;
+            /* Calculate PID here, argument is error */
+            /* Output data will be returned, we will use it as duty cycle parameter */
+            //currentDuty = duty;
+            duty = arm_pid_f32(&PID, pid_error)/1000;
+            /* Check overflow, duty cycle in percent */
+            if (duty > 100) {
+            duty = 100;
+            } else if (duty < 0) {
+            duty = 0;
+            }
+//            pastDuty = duty;
 //        }
-//        else if(LIGHT_CURRENT >= LIGHT_WANT)
+//        else
 //        {
-//            pid_error = LIGHT_WANT - LIGHT_CURRENT;
+//            pid_error = pid_error * (-1);
+//             duty = arm_pid_f32(&PID, pid_error);
+//            /* Check overflow, duty cycle in percent */
+//            /**/
+//            duty = duty - pastDuty;
+//            if (duty > 100) {
+//            duty = 100;
+//            } else if (duty < 0) {
+//            duty = 0;
+//            }
+//            pastDuty = duty;
 //        }
-        /* Calculate PID here, argument is error */
-        /* Output data will be returned, we will use it as duty cycle parameter */
-        //currentDuty = duty;
-        duty = arm_pid_f32(&PID, pid_error);
-
-        /* Check overflow, duty cycle in percent */
-        if (duty > 100) {
-        duty = 100;
-        } else if (duty < 0) {
-        duty = 0;
-        }
-        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
-        /*
-        if(pid_error >= 0)
+        i++;
+            if(i==100)
+                {
+                    i=0;
+                } 
+ vTaskDelay(1000 / portTICK_RATE_MS );                
+        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, i);
+            
+/*====================================================================================================================*/
+/*                                               XỬ lÝ ẢNH HƯỞNG SỨC KHỎE                                             */
+/*====================================================================================================================*/
+        if((userData.uD_distance < ADV_DISTANCE) && (userData.uD_distance >10))
+        /*Nếu khoảng cách nhỏ hơn ADV_DISTANCE*/
         {
-            TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty - duty);
+            /*=====YES=====*/
+            if(userData.uD_isSitting)
+            /*Nếu mà đang ngồi*/
+            {
+                if(tempSecond!=CrTime.seconds)
+                {
+                /*Thời gian ngồi liên tục  = CrTime - Thời gian bắt đầu*/
+                    userData.uD_hisTime_Con++;
+                    userData.uD_hisTime_Day++;
+                    tempSecond = CrTime.seconds;
+                //userData.uD_hisTime_Con = (CrTime.minutes - userData.uD_StartTime.minutes)*60+(CrTime.seconds - userData.uD_StartTime.seconds);
+                //userData.uD_hisTime_Day = tempTDay + userData.uD_hisTime_Con;
+                }
+            }
+            else
+            /*Không phải là đang ngồi*/
+            {
+                /*isSitting =1*/
+                userData.uD_isSitting = 1;
+                /*Thời gian bắt đầu = CrTime*/
+                userData.uD_StartTime.hours = CrTime.hours;
+                userData.uD_StartTime.minutes = CrTime.minutes;
+                userData.uD_StartTime.seconds = CrTime.seconds;
+            }
         }
-        else if(pid_error < 0)
+        else
         {
-            //Set PWM duty cycle for LED
-            TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, currentDuty + (duty*(-1)));
-        }*/
-        //TM_DISCO_LedToggle(LED_GREEN);
+            /*=====NO=====*/
+            /*Ngồi liên tục = 0*/
+            //userData.uD_hisTime_Day += userData.uD_hisTime_Con;
+            userData.uD_hisTime_Con = 0;
+            /*Đang ngồi = 0*/
+            userData.uD_isSitting =0;
+        }
+/*====================================================================================================================*/
+/*                                               REMINDER                                                             */
+/*====================================================================================================================*/
         
-        vTaskDelay( 100 / portTICK_RATE_MS );
+        if(compareTime(head->reminder.reminderTime,CrTime) == 0)
+        {
+            TM_USART_Puts(USART6,head->reminder.reminderText);
+            deleteFirst();
+        }
+        vTaskDelay(100 / portTICK_RATE_MS );
     }
+    
 }
 
 static void vDA2_ReadSensor(void *pvParameters)
@@ -593,16 +696,25 @@ static void vDA2_ReadSensor(void *pvParameters)
         InRoomEvn.DoAmKhi = DHT_doam();
         InRoomEvn.NhietDo = DHT_nhietdo();
         
-        userData.distance = getDistance(TM_ADC_Read(ADC1,ADC_Channel_0));
+        userData.uD_distance = getDistance(TM_ADC_Read(ADC1,ADC_Channel_0));
         
         TM_DS1307_GetDateTime(&CrTime);
         CrTime.year+=2000;
-        TM_DISCO_LedToggle(LED_ORANGE);
+        if(tempMinutes != CrTime.minutes)
+        {
+            countMinutes++;
+            tempMinutes = CrTime.minutes;
+        }
         
         if(!TM_USART_BufferEmpty(USART6))
         {
             newRemindFlag = 1;
         }
+        //if(CrTime.minutes%2==0)
+        //{
+        //    connect();
+        //    senddata(InRoomEvn);
+        //}
     }
 }
 
@@ -610,7 +722,8 @@ static void vDA2_ShowLCD(void *pvParameters)
 {
     for(;;)
     {
-        //vTaskDelay( 300 / portTICK_RATE_MS );
+        vTaskDelay( 250 / portTICK_RATE_MS );
+        TM_DISCO_LedToggle(LED_ORANGE);
         mLCD_showSensor();
         mLCD_showDateTime();
     }
@@ -621,7 +734,7 @@ float getDistance(uint16_t voltaValue)
 {
     float volts = voltaValue*0.0048828125;
     // value from sensor * (5/1024) - if running 3.3.volts then change 5 to 3.3
-    float distance = 65*pow(volts, -1.10);
+    float distance = 320*pow(volts, -1.10);
     return distance;
 }
 
@@ -697,39 +810,39 @@ int mLCD_writeLine(uint16_t posY, uint16_t posX, int range, uint16_t color, uint
     LCD_SetTextColor(color);
     LCD_CharSize(size);
     LCD_StringLine(posY,posX,(unsigned char*)string);
+    return 1;
 }
+
 
 int mLCD_showSensor()
 {
+    mLCD_RS();
     LCD_SetBackColor(INFO_BACKGOURND);
     LCD_SetTextColor(INFO_COLOR);
     LCD_CharSize(16);
     //LCD_Clear_P(WHITE, 110, 240, 5120);
-    
-    
-    sprintf(sbuff, "Temp: %5.0d",InRoomEvn.NhietDo);
+    sprintf(sbuff, "Temp:%5.1d C",InRoomEvn.NhietDo);
     LCD_StringLine(INFO_Y+16, INFO_X, (uint8_t *)sbuff);
 
-    sprintf(sbuff, "Light:%5.0d",InRoomEvn.AnhSang);
+    sprintf(sbuff, "Lght:%5.1d L",InRoomEvn.AnhSang);
     LCD_StringLine(INFO_Y+32, INFO_X, (uint8_t *)sbuff);
     
-    sprintf(sbuff, "Humi: %5.0d",InRoomEvn.DoAmKhi);
+    sprintf(sbuff, "Humi:%5.1d %%",InRoomEvn.DoAmKhi);
     LCD_StringLine(INFO_Y+48, INFO_X, (uint8_t *)sbuff);
     
-    sprintf(sbuff, "Dist: %5.2f",userData.distance);
+    sprintf(sbuff, "Dist:%5.1f C",userData.uD_distance);
     LCD_StringLine(INFO_Y+64, INFO_X, (uint8_t *)sbuff);
     
-    sprintf(sbuff, "ST/D: %5.2f",userData.distance);
+    sprintf(sbuff, "TCon:%5.1d S",userData.uD_hisTime_Con);
     LCD_StringLine(INFO_Y+80, INFO_X, (uint8_t *)sbuff);
     
-    sprintf(sbuff, "ST/S: %5.2f",userData.distance);
+    sprintf(sbuff, "TDay:%5.1d S",userData.uD_hisTime_Day);
     LCD_StringLine(INFO_Y+96, INFO_X, (uint8_t *)sbuff);
     
     mLCD_RS();
     if(newRemindFlag)
     {
-        //LCD_Clear_P(BLACK, 150, 329-1*8, 10240);
-        /*New*/
+        /*New remind*/
         clearReminder(reminder);
         TM_USART_Gets(USART6,reminder,TM_USART6_BUFFER_SIZE);
         TM_USART_ClearBuffer(USART6);
@@ -775,19 +888,49 @@ int mLCD_showSensor()
             /*Delete*/
             deleteFirst();
         }
-        
-        
-        
-        
         newRemindFlag =0;
-        
     }
+    if(compareTime(CrTime,head->reminder.reminderTime)==1)
+    /*So sánh nếu thời gian hệ thống bằng với thời gian của head*/
+    {
+        /*Thông báo*/
+        sprintf(sbuff, "Time To: %s\r\n",head->reminder.reminderText);
+        TM_USART_Puts(USART6, sbuff);
+        /*Xóa first*/
+        deleteFirst();
+        /*Cập nhật lại LCD*/
+        mLCD_ShowListRemind();
+    }
+    
+    /*Hiển thị LCD*/
+    LCD_SetColors(ADV_COLOR,ADV_BACKGOURND);
+    LCD_CharSize(ADV_SIZE);
+    //LCD_Clear_P(BLACK,ADV_Y,ADV_X+12,ADV_RANGE);
+    if((userData.uD_hisTime_Con == ADV_Hour_Con)
+     ||(userData.uD_hisTime_Con == ADV_Hour_Con-1))
+    /*Nếu mà ngồi liên tục > 2h*/
+    {
+        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TAKE_REST);
+        TM_USART_Puts(USART6,"ADV_TAKE_REST \r\n");
+    }
+    else if(userData.uD_hisTime_Day == ADV_Hour_Day)
+    {
+        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TOO_HARD);
+        TM_USART_Puts(USART6,"ADV_TOO_HARD \r\n");
+    }
+    else
+    {
+        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_HAPPY);
+        //TM_USART_Puts(USART6,"ADV_HAPPY \r\n");
+    }
+    mLCD_RS();
     return 1;
 }
 
 int mLCD_ShowListRemind()
 {
     /*Show first*/
+    mLCD_RS();
     struct node * _current;
     _current = head;
     LCD_SetTextColor(NOTE_COLOR);
@@ -823,6 +966,7 @@ int mLCD_ShowListRemind()
     }
     sprintf(sbuff,"%02d",length());
     LCD_StringLine(239/2+1,60,(uint8_t *)sbuff);
+    mLCD_RS();
     return 1;
 }
 
@@ -846,6 +990,7 @@ int mLCD_showDateTime()
     if (CrTime.hours == 0 && CrTime.minutes == 00 && CrTime.seconds == 0)
     {
          mLCD_showDate();
+         userData.uD_hisTime_Day =0;
     }
     return 1;
 }

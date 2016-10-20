@@ -1,4 +1,5 @@
 #include "esp8266.h"
+
 //char* buffer_Esp;
 /**
  * Hàm này dùng để giao tiếp với esp
@@ -99,24 +100,7 @@ int connect(void)
  * @param  NRF Struct thời tiết
  * @return     1
  */
-int senddata(NRF_ThoiTiet NRF)
-{
-  sendEsp(IP, PORT, APIKEY, "field1=", NRF.NhietDo);
-	vTaskDelay(3000 / portTICK_RATE_MS);
-  //Delayms(3000);
-  sendEsp(IP, PORT, APIKEY, "field2=", NRF.DoAm);
-	vTaskDelay(3000 / portTICK_RATE_MS);
-  //Delayms(3000);
-  sendEspPre(IP, PORT, APIKEY, "field3=", NRF.ApSuat);
-	vTaskDelay(3000 / portTICK_RATE_MS);
-  //Delayms(3000);
-  sendEsp(IP, PORT, APIKEY, "field4=", NRF.Mua);
-//	vTaskDelay(3000 / portTICK_RATE_MS);
-//	sendEspPre(IP, PORT, APIKEY, "field5=",WthFor.output*100);
-	vTaskDelay(3000 / portTICK_RATE_MS);
-  //Delayms(3000);
-  return 1;
-}
+
 
 
 int sendEspPre(char* ip, uint32_t port, char apiKey[], char fieldx[],

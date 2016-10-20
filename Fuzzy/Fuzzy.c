@@ -1,207 +1,181 @@
 #include "Fuzzy.h"
-
-float percentMonth(float month) {
-  if ((month >= 2) && (month <= 8)) {
-    return 100 - ((month - 2) / (8 - 2)) * 100;
-  } else {
-    if (month <= 2) {
-      month = month + 12;
-    }
-    return ((month - 8) / (14 - 8)) * 100;
-  }
+/*============================================================================*/
+/*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\FUNCTION DEFINE*/
+/*============================================================================*/
+/* Memory locate*/
+void    fuzzy_init_2    (FUZ_SYS_2 *fuzzy_system_2)
+{
+    
 }
 
-float percentDay(float hour) {
-  if ((hour >= 0) && (hour <= 12)) {
-    // return rightall(hour, 100, 100);
-    return (((hour - 0) / (12 - 0)) * 100);
-  } else {
-    // return leftall(hour, 100, 0);
-    return (100 - ((hour - 12) / (12 - 0)) * 100);
-  }
-}
+void    fuzzy_free_2      (FUZ_SYS_2 *fuzzy_system_2);
+/*Fuzzy control*/
+float   fuzzy_control_2 (float vInMem1,float vInMem2,FUZ_SYS_2 *fuzzy_system_2);
+/*Defuzzy*/
+float   inf_defuzz_2    (IN_MEM *in_mem1, IN_MEM *in_mem2, OUT_MEM *out_mem);
+void    findMaxMin_2    (const IN_MEM *in_mem1,const IN_MEM *in_mem2);
+/*internal functions*/
+int fuzzyify_three(float u, IN_MEM *mem);
+int fuzzyify_two(float u, IN_MEM *mem);
+float leftall(float u, float w, float c);
+float rightall(float u, float w, float c);
+float triangle(float u, float w, float c);
+/*============================================================================*/
+/*/////////////////////////////////////////////////////////////FUNCTION DEFINE*/
+/*============================================================================*/
 
+/*============================================================================*/
+/*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\MIN_MAX*/
+/*==============================MIN_MAX=======================================*/
 float MIN5(float num1, float num2, float num3, float num4, float num5) {
   return MIN(num1, MIN(num2, MIN(num3, MIN(num4, num5))));
 }
 
-/************************************************************************************/
+float MIN3(float num1, float num2, float num3) {
+  return MIN(num1, MIN(num2, num3));
+}
+
 float MAX5(float num1, float num2, float num3, float num4, float num5) {
   return MAX(num1, MAX(num2, MAX(num3, MAX(num4, num5))));
 }
 
-
-/************************************************************************************/
-void fuzzy_init_lwf(FUZ_SYS_LWF *fuzzy_system_lwf) {
+float MAX3(float num1, float num2, float num3) {
+  return MAX(num1, MIN(num2, num3));
+}
+/*============================================================================*/
+/*/////////////////////////////////////////////////////////////////////MIN_MAX*/
+/*==============================MIN_MAX=======================================*/
+void    fuzzy_init_22    (FUZ_SYS_2 *fuzzy_system_2)
+{
   /* Define the input and output membership functions. */
   int i = 0;
   int sizeof_IN_MEM = sizeof(IN_MEM);
   int sizeof_OUT_MEM = sizeof(OUT_MEM);
   /* Allocate memory for membership functions. */
-  if (!(fuzzy_system_lwf->tem_mem = (IN_MEM *)malloc(sizeof(IN_MEM)))) {
+  if (!(fuzzy_system_2->in_mem1 = (IN_MEM *)malloc(sizeof(IN_MEM)))) {
     printf("Error allocating memory.\n");
     // exit(1);
   }
-  if (!(fuzzy_system_lwf->hum_mem = (IN_MEM *)malloc(sizeof(IN_MEM)))) {
-    printf("Error allocating memory.\n");
-    // exit(1);
-  }
-  if (!(fuzzy_system_lwf->presdown_mem = (IN_MEM *)malloc(sizeof(IN_MEM)))) {
-    printf("Error allocating memory.\n");
-    // exit(1);
-  }
-  if (!(fuzzy_system_lwf->rateYear_mem = (IN_MEM *)malloc(sizeof(IN_MEM)))) {
-    printf("Error allocating memory.\n");
-    // exit(1);
-  }
-  if (!(fuzzy_system_lwf->rateDay_mem = (IN_MEM *)malloc(sizeof(IN_MEM)))) {
+  if (!(fuzzy_system_2->in_mem2 = (IN_MEM *)malloc(sizeof(IN_MEM)))) {
     printf("Error allocating memory.\n");
     // exit(1);
   }
 
-  if (!(fuzzy_system_lwf->out_mem = (OUT_MEM *)malloc(sizeof(OUT_MEM)))) {
+  if (!(fuzzy_system_2->out_mem = (OUT_MEM *)malloc(sizeof(OUT_MEM)))) {
     printf("Error allocating memory.\n");
     // exit(1);
   }
 
-  if (!(fuzzy_system_lwf->tem_mem->center =
+  if (!(fuzzy_system_2->in_mem1->center =
             (float *)malloc(3 * sizeof(float)))) {
     printf("Error allocating memory.\n");
     // exit(1);
   }
-  if (!(fuzzy_system_lwf->tem_mem->dom = (float *)malloc(3 * sizeof(float)))) {
+  if (!(fuzzy_system_2->in_mem1->dom = (float *)malloc(3 * sizeof(float)))) {
     printf("Error allocating memory.\n");
     // exit(1);
   }
-  if (!(fuzzy_system_lwf->hum_mem->center =
+  if (!(fuzzy_system_2->in_mem2->center =
             (float *)malloc(3 * sizeof(float)))) {
     printf("Error allocating memory.\n");
     // exit(1);
   }
-  if (!(fuzzy_system_lwf->hum_mem->dom = (float *)malloc(3 * sizeof(float)))) {
-    printf("Error allocating memory.\n");
-  }
-  if (!(fuzzy_system_lwf->presdown_mem->center =
-            (float *)malloc(2 * sizeof(float)))) {
-    printf("Error allocating memory.\n");
-    // exit(1);
-  }
-  if (!(fuzzy_system_lwf->presdown_mem->dom =
-            (float *)malloc(2 * sizeof(float)))) {
+  if (!(fuzzy_system_2->in_mem2->dom = (float *)malloc(3 * sizeof(float)))) {
     printf("Error allocating memory.\n");
   }
 
-  if (!(fuzzy_system_lwf->rateYear_mem->center =
-            (float *)malloc(2 * sizeof(float)))) {
-    printf("Error allocating memory.\n");
-    // exit(1);
-  }
-  if (!(fuzzy_system_lwf->rateYear_mem->dom =
-            (float *)malloc(2 * sizeof(float)))) {
-    printf("Error allocating memory.\n");
-  }
-  if (!(fuzzy_system_lwf->rateDay_mem->center =
-            (float *)malloc(2 * sizeof(float)))) {
-    printf("Error allocating memory.\n");
-    // exit(1);
-  }
-  if (!(fuzzy_system_lwf->rateDay_mem->dom =
-            (float *)malloc(2 * sizeof(float)))) {
-    printf("Error allocating memory.\n");
-  }
-
-  if (!(fuzzy_system_lwf->out_mem->center =
+  if (!(fuzzy_system_2->out_mem->center =
             (float *)malloc(5 * sizeof(float)))) {
     printf("Error allocating memory.\n");
     // exit(1);
   }
-  if (!(fuzzy_system_lwf->out_mem->dom = (float *)malloc(5 * sizeof(float)))) {
+  if (!(fuzzy_system_2->out_mem->dom = (float *)malloc(5 * sizeof(float)))) {
     printf("Error allocating memory.\n");
     // TM_DISCO_LedToggle(LED_RED);
     i = 1;
   }
 
   /* Initialize for local weather forecast. */
-  fuzzy_system_lwf->tem_mem->width = TEMP_WITCH;
-  fuzzy_system_lwf->hum_mem->width = HUM_WITCH;
-  fuzzy_system_lwf->presdown_mem->width = PRES_WIDTH;
-  fuzzy_system_lwf->rateYear_mem->width = RATE_YEAR_WIDTH;
-  fuzzy_system_lwf->rateDay_mem->width = RATE_DAY_WIDTH;
-  fuzzy_system_lwf->out_mem->width = OUT_PUT_WIDTH;
+  fuzzy_system_2->in_mem1->width = TEMP_WITCH;
+  fuzzy_system_2->hum_mem->width = HUM_WITCH;
+  fuzzy_system_2->presdown_mem->width = PRES_WIDTH;
+  fuzzy_system_2->rateYear_mem->width = RATE_YEAR_WIDTH;
+  fuzzy_system_2->rateDay_mem->width = RATE_DAY_WIDTH;
+  fuzzy_system_2->out_mem->width = OUT_PUT_WIDTH;
 
-  fuzzy_system_lwf->tem_mem->center[0] = TEMP_LEFT;
-  fuzzy_system_lwf->tem_mem->center[1] = TEMP_CENTER;
-  fuzzy_system_lwf->tem_mem->center[2] = TEMP_RIGHT;
+  fuzzy_system_2->in_mem1->center[0] = TEMP_LEFT;
+  fuzzy_system_2->in_mem1->center[1] = TEMP_CENTER;
+  fuzzy_system_2->in_mem1->center[2] = TEMP_RIGHT;
 
-  fuzzy_system_lwf->hum_mem->center[0] = HUM_LEFT;
-  fuzzy_system_lwf->hum_mem->center[1] = HUM_CENTER;
-  fuzzy_system_lwf->hum_mem->center[2] = HUM_RIGHT;
+  fuzzy_system_2->hum_mem->center[0] = HUM_LEFT;
+  fuzzy_system_2->hum_mem->center[1] = HUM_CENTER;
+  fuzzy_system_2->hum_mem->center[2] = HUM_RIGHT;
 
-  fuzzy_system_lwf->presdown_mem->center[0] = PRES_LEFT;
-  fuzzy_system_lwf->presdown_mem->center[1] = PRES_RIGHT;
+  fuzzy_system_2->presdown_mem->center[0] = PRES_LEFT;
+  fuzzy_system_2->presdown_mem->center[1] = PRES_RIGHT;
 
-  fuzzy_system_lwf->rateYear_mem->center[0] = RATE_YEAR_LEFT;
-  fuzzy_system_lwf->rateYear_mem->center[1] = RATE_YEAR_RIGHT;
+  fuzzy_system_2->rateYear_mem->center[0] = RATE_YEAR_LEFT;
+  fuzzy_system_2->rateYear_mem->center[1] = RATE_YEAR_RIGHT;
 
-  fuzzy_system_lwf->rateDay_mem->center[0] = RATE_DAY_LEFT;
-  fuzzy_system_lwf->rateDay_mem->center[1] = RATE_DAY_RIGHT;
+  fuzzy_system_2->rateDay_mem->center[0] = RATE_DAY_LEFT;
+  fuzzy_system_2->rateDay_mem->center[1] = RATE_DAY_RIGHT;
   for (i = 0; i < 5; i++)
   {
-    fuzzy_system_lwf->out_mem->center[i] = i * OUT_PUT_WIDTH;
-    fuzzy_system_lwf->out_mem->dom[i] = 0;
+    fuzzy_system_2->out_mem->center[i] = i * OUT_PUT_WIDTH;
+    fuzzy_system_2->out_mem->dom[i] = 0;
     //		std::cout << "outmem center :" <<
-    //fuzzy_system_lwf->out_mem->center[i]<<std::endl;
+    //fuzzy_system_2->out_mem->center[i]<<std::endl;
   }
 }
 
 /************************************************************************************/
 
-void fuzzy_free(FUZ_SYS_LWF *fuzzy_system_lwf) {
+void fuzzy_free(FUZ_SYS_LWF *fuzzy_system_2) {
   /* Free memory allocated in fuzzy_init(). */
-  free(fuzzy_system_lwf->tem_mem->center);
-  free(fuzzy_system_lwf->tem_mem->dom);
+  free(fuzzy_system_2->in_mem1->center);
+  free(fuzzy_system_2->in_mem1->dom);
 
-  free(fuzzy_system_lwf->hum_mem->center);
-  free(fuzzy_system_lwf->hum_mem->dom);
+  free(fuzzy_system_2->hum_mem->center);
+  free(fuzzy_system_2->hum_mem->dom);
 
-  free(fuzzy_system_lwf->presdown_mem->center);
-  free(fuzzy_system_lwf->presdown_mem->dom);
+  free(fuzzy_system_2->presdown_mem->center);
+  free(fuzzy_system_2->presdown_mem->dom);
 
-  free(fuzzy_system_lwf->rateYear_mem->center);
-  free(fuzzy_system_lwf->rateYear_mem->dom);
+  free(fuzzy_system_2->rateYear_mem->center);
+  free(fuzzy_system_2->rateYear_mem->dom);
 
-  free(fuzzy_system_lwf->rateDay_mem->center);
-  free(fuzzy_system_lwf->rateDay_mem->dom);
+  free(fuzzy_system_2->rateDay_mem->center);
+  free(fuzzy_system_2->rateDay_mem->dom);
 
-  free(fuzzy_system_lwf->out_mem->center);
-  free(fuzzy_system_lwf->out_mem->dom);
+  free(fuzzy_system_2->out_mem->center);
+  free(fuzzy_system_2->out_mem->dom);
 
-  free(fuzzy_system_lwf->tem_mem);
-  free(fuzzy_system_lwf->hum_mem);
-  free(fuzzy_system_lwf->presdown_mem);
-  free(fuzzy_system_lwf->rateYear_mem);
-  free(fuzzy_system_lwf->rateDay_mem);
-  free(fuzzy_system_lwf->out_mem);
+  free(fuzzy_system_2->in_mem1);
+  free(fuzzy_system_2->hum_mem);
+  free(fuzzy_system_2->presdown_mem);
+  free(fuzzy_system_2->rateYear_mem);
+  free(fuzzy_system_2->rateDay_mem);
+  free(fuzzy_system_2->out_mem);
 }
 
 /************************************************************************************/
 float fuzzy_control_lwf(float tem, float hum, float presDown, float rateYear,
-                        float rateDay, FUZ_SYS_LWF *fuzzy_system_lwf) {
+                        float rateDay, FUZ_SYS_LWF *fuzzy_system_2) {
 
   /* Given crisp inputs e and edot, determine the crisp output u. */
 
   // int pos[5];
 
-  fuzzyify_three(tem, fuzzy_system_lwf->tem_mem);
-  fuzzyify_three(hum, fuzzy_system_lwf->hum_mem);
-  fuzzyify_two(presDown, fuzzy_system_lwf->presdown_mem);
-  fuzzyify_two(rateYear, fuzzy_system_lwf->rateYear_mem);
-  fuzzyify_two(rateDay, fuzzy_system_lwf->rateDay_mem);
+  fuzzyify_three(tem, fuzzy_system_2->in_mem1);
+  fuzzyify_three(hum, fuzzy_system_2->hum_mem);
+  fuzzyify_two(presDown, fuzzy_system_2->presdown_mem);
+  fuzzyify_two(rateYear, fuzzy_system_2->rateYear_mem);
+  fuzzyify_two(rateDay, fuzzy_system_2->rateDay_mem);
 
   return inf_defuzz_lwf2(
-      fuzzy_system_lwf->tem_mem, fuzzy_system_lwf->hum_mem,
-      fuzzy_system_lwf->presdown_mem, fuzzy_system_lwf->rateYear_mem,
-      fuzzy_system_lwf->rateDay_mem, fuzzy_system_lwf->out_mem);
+      fuzzy_system_2->in_mem1, fuzzy_system_2->hum_mem,
+      fuzzy_system_2->presdown_mem, fuzzy_system_2->rateYear_mem,
+      fuzzy_system_2->rateDay_mem, fuzzy_system_2->out_mem);
 }
 
 /************************************************************************************/
@@ -267,7 +241,7 @@ NOTE:  u is input, c is mem. fun. center, and w is mem. fun. width. */
 /*defuzzi using Sugeno*/
 
 void findMaxMin(
-	const IN_MEM *tem_mem,
+	const IN_MEM *in_mem1,
 	const IN_MEM *hum_mem,
 	const IN_MEM *presDown_mem,
 	const IN_MEM *rateYear_mem,
@@ -290,14 +264,14 @@ void findMaxMin(
 				for (n = 0; n < 2; n++)
 					for (k = 0; k < 2; k++)
 					{
-						if ((tem_mem->dom[i] != 0.0)
+						if ((in_mem1->dom[i] != 0.0)
 							&& (hum_mem->dom[j] != 0.0)
 							&& (presDown_mem->dom[m] != 0.0)
 							&& (rateYear_mem->dom[n] != 0.0)
 							&& (rateDay_mem->dom[k] != 0.0))
 						{
 
-							tmp = MIN5(tem_mem->dom[i],
+							tmp = MIN5(in_mem1->dom[i],
 								hum_mem->dom[j],
 								presDown_mem->dom[m],
 								rateYear_mem->dom[n],
@@ -316,12 +290,12 @@ void findMaxMin(
 	}
 }
 
-float inf_defuzz_lwf2(IN_MEM *tem_mem, IN_MEM *hum_mem, IN_MEM *presDown_mem,
+float inf_defuzz_lwf2(IN_MEM *in_mem1, IN_MEM *hum_mem, IN_MEM *presDown_mem,
                       IN_MEM *rateYear_mem, IN_MEM *rateDay_mem,
                       OUT_MEM *out_mem) {
   float WAtot = 0, Atot = 0;
   int i = 0;
-  findMaxMin(tem_mem, hum_mem, presDown_mem, rateYear_mem, rateDay_mem,
+  findMaxMin(in_mem1, hum_mem, presDown_mem, rateYear_mem, rateDay_mem,
              out_mem);
 
   // Processing defuzzification
