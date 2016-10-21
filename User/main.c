@@ -479,7 +479,7 @@ int initMain(int flag)
         I2C1_Init();
         /*I2C1_PINS PACK 2
         SCL=PB8_SDA=PB9  */
-        BH1750_Init();
+        //BH1750_Init();
 
         DHT_GetTemHumi();
         
@@ -592,22 +592,22 @@ static void vDA2_Response(void *pvParameters)
 /*                                                             PID                                                    */
 /*====================================================================================================================*/
         /* Calculate error */
-        LIGHT_CURRENT = InRoomEvn.AnhSang;
-        LIGHT_WANT = lightWantValue;
-        pid_error = LIGHT_WANT - LIGHT_CURRENT;
-//        int pastDuty = duty;
-//        if(pid_error >=0)
-//        {
-            /* Calculate PID here, argument is error */
-            /* Output data will be returned, we will use it as duty cycle parameter */
-            //currentDuty = duty;
-            duty = arm_pid_f32(&PID, pid_error)/1000;
-            /* Check overflow, duty cycle in percent */
-            if (duty > 100) {
-            duty = 100;
-            } else if (duty < 0) {
-            duty = 0;
-            }
+//        LIGHT_CURRENT = InRoomEvn.AnhSang;
+//        LIGHT_WANT = lightWantValue;
+//        pid_error = LIGHT_WANT - LIGHT_CURRENT;
+////        int pastDuty = duty;
+////        if(pid_error >=0)
+////        {
+//            /* Calculate PID here, argument is error */
+//            /* Output data will be returned, we will use it as duty cycle parameter */
+//            //currentDuty = duty;
+//            duty = arm_pid_f32(&PID, pid_error)/1000;
+//            /* Check overflow, duty cycle in percent */
+//            if (duty > 100) {
+//            duty = 100;
+//            } else if (duty < 0) {
+//            duty = 0;
+//            }
 //            pastDuty = duty;
 //        }
 //        else
@@ -629,9 +629,9 @@ static void vDA2_Response(void *pvParameters)
                 {
                     i=0;
                 } 
- vTaskDelay(1000 / portTICK_RATE_MS );                
+ //vTaskDelay(1000 / portTICK_RATE_MS );                
         TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, i);
-            
+
 /*====================================================================================================================*/
 /*                                               XỬ lÝ ẢNH HƯỞNG SỨC KHỎE                                             */
 /*====================================================================================================================*/
@@ -672,18 +672,18 @@ static void vDA2_Response(void *pvParameters)
             /*Đang ngồi = 0*/
             userData.uD_isSitting =0;
         }
-/*====================================================================================================================*/
-/*                                               REMINDER                                                             */
-/*====================================================================================================================*/
-        
-        if(compareTime(head->reminder.reminderTime,CrTime) == 0)
-        {
-            TM_USART_Puts(USART6,head->reminder.reminderText);
-            deleteFirst();
-        }
-        vTaskDelay(100 / portTICK_RATE_MS );
+///*====================================================================================================================*/
+///*                                               REMINDER                                                             */
+///*====================================================================================================================*/
+//        
+//        if(compareTime(head->reminder.reminderTime,CrTime) == 0)
+//        {
+//            TM_USART_Puts(USART6,head->reminder.reminderText);
+//            deleteFirst();
+//        }
+//        vTaskDelay(100 / portTICK_RATE_MS );
     }
-    
+
 }
 
 static void vDA2_ReadSensor(void *pvParameters)
@@ -722,7 +722,7 @@ static void vDA2_ShowLCD(void *pvParameters)
 {
     for(;;)
     {
-        vTaskDelay( 250 / portTICK_RATE_MS );
+        vTaskDelay( 200 / portTICK_RATE_MS );
         TM_DISCO_LedToggle(LED_ORANGE);
         mLCD_showSensor();
         mLCD_showDateTime();
