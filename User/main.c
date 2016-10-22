@@ -487,7 +487,7 @@ int initMain(int flag)
         /*ADC: Pin_A0 (ADC1 channel 0)*/
         TM_ADC_Init(ADC1,ADC_Channel_0);
 
-        TM_USART_Init(USART6, TM_USART_PinsPack_1, 100);
+        TM_USART_Init(USART6, TM_USART_PinsPack_1, 9600);
         //TM_USART_Init(USART2, TM_USART_PinsPack_2, 9600);
         TM_USART_SetCustomStringEndCharacter(USART6,'.');
         
@@ -498,7 +498,6 @@ int initMain(int flag)
             /*Warning that RTC error*/
             TM_DISCO_LedOn(LED_ALL);
         }
-            
 #if 1 /*Setting datetime*/
         {
             /* Set date and time */
@@ -519,7 +518,6 @@ int initMain(int flag)
             TM_DS1307_EnableOutputPin(TM_DS1307_OutputFrequency_4096Hz);
         }
         
-        
 #endif /*END DATETIME SETTING*/
         TM_DS1307_GetDateTime(&CrTime);
         CrTime.year += 2000;
@@ -534,7 +532,7 @@ int initMain(int flag)
 
         
         /*PWM and PID*/
-        if(1)
+        if(0)
         {
 
         /* Set PID parameters */
@@ -579,8 +577,52 @@ int initTask()
 {
     xTaskCreate(vDA2_ReadSensor,(const signed char*)"vDA2_ReadSensor",STACK_SIZE_MIN,NULL,tskIDLE_PRIORITY+3,&ptr_readSensor);
     xTaskCreate(vDA2_ShowLCD, (const signed char *)"vDA2_ShowLCD", STACK_SIZE_MIN+384,NULL, tskIDLE_PRIORITY+1,&ptr_showLCD);
-    //xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+2,&ptr_response);
+    xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+2,&ptr_response);
     return 1;
+}
+
+static void vDA2_ReadSensor(void *pvParameters)
+{
+    for(;;)
+    {
+        vTaskDelay( 100 / portTICK_RATE_MS );
+        DHT_GetTemHumi();
+        InRoomEvn.AnhSang = BH1750_Read();
+        InRoomEvn.DoAmKhi = DHT_doam();
+        InRoomEvn.NhietDo = DHT_nhietdo();
+        
+        userData.uD_distance = getDistance(TM_ADC_Read(ADC1,ADC_Channel_0));
+        
+        TM_DS1307_GetDateTime(&CrTime);
+        CrTime.year+=2000;
+        if(tempMinutes != CrTime.minutes)
+        {
+            countMinutes++;
+            tempMinutes = CrTime.minutes;
+        }
+        
+        if(!TM_USART_BufferEmpty(USART6))
+        {
+            newRemindFlag = 1;
+             TM_DISCO_LedToggle(LED_ORANGE);
+        }
+        //if(CrTime.minutes%2==0)
+        //{
+        //    connect();
+        //    senddata(InRoomEvn);
+        //}
+    }
+}
+
+static void vDA2_ShowLCD(void *pvParameters)
+{
+    for(;;)
+    {
+        vTaskDelay( 250 / portTICK_RATE_MS );
+       
+        mLCD_showSensor();
+        mLCD_showDateTime();
+    }
 }
 
 static void vDA2_Response(void *pvParameters)
@@ -624,13 +666,13 @@ static void vDA2_Response(void *pvParameters)
 //            }
 //            pastDuty = duty;
 //        }
-        i++;
-            if(i==100)
-                {
-                    i=0;
-                } 
- //vTaskDelay(1000 / portTICK_RATE_MS );                
-        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, i);
+//        i++;
+//            if(i==100)
+//                {
+//                    i=0;
+//                } 
+// //vTaskDelay(1000 / portTICK_RATE_MS );                
+//        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, i);
 
 /*====================================================================================================================*/
 /*                                               XỬ lÝ ẢNH HƯỞNG SỨC KHỎE                                             */
@@ -681,54 +723,10 @@ static void vDA2_Response(void *pvParameters)
 //            TM_USART_Puts(USART6,head->reminder.reminderText);
 //            deleteFirst();
 //        }
-//        vTaskDelay(100 / portTICK_RATE_MS );
+        vTaskDelay(100 / portTICK_RATE_MS );
     }
 
 }
-
-static void vDA2_ReadSensor(void *pvParameters)
-{
-    for(;;)
-    {
-        vTaskDelay( 250 / portTICK_RATE_MS );
-        DHT_GetTemHumi();
-        InRoomEvn.AnhSang = BH1750_Read();
-        InRoomEvn.DoAmKhi = DHT_doam();
-        InRoomEvn.NhietDo = DHT_nhietdo();
-        
-        userData.uD_distance = getDistance(TM_ADC_Read(ADC1,ADC_Channel_0));
-        
-        TM_DS1307_GetDateTime(&CrTime);
-        CrTime.year+=2000;
-        if(tempMinutes != CrTime.minutes)
-        {
-            countMinutes++;
-            tempMinutes = CrTime.minutes;
-        }
-        
-        if(!TM_USART_BufferEmpty(USART6))
-        {
-            newRemindFlag = 1;
-        }
-        //if(CrTime.minutes%2==0)
-        //{
-        //    connect();
-        //    senddata(InRoomEvn);
-        //}
-    }
-}
-
-static void vDA2_ShowLCD(void *pvParameters)
-{
-    for(;;)
-    {
-        vTaskDelay( 200 / portTICK_RATE_MS );
-        TM_DISCO_LedToggle(LED_ORANGE);
-        mLCD_showSensor();
-        mLCD_showDateTime();
-    }
-}
-
 
 float getDistance(uint16_t voltaValue)
 {
