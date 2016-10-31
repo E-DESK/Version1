@@ -36,3 +36,7 @@
 .\objects\bh1750.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_dac.h
 .\objects\bh1750.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_dcmi.h
 .\objects\bh1750.o: ..\Libraries\STM32F4xx_StdPeriph_Driver\inc\stm32f4xx_fsmc.h
+.\objects\bh1750.o: ..\TM\tm_stm32f4_i2c.h
+.\objects\bh1750.o: ..\TM\attributes.h
+.\objects\bh1750.o: ..\TM\defines.h
+.\objects\bh1750.o: ..\TM\tm_stm32f4_gpio.h

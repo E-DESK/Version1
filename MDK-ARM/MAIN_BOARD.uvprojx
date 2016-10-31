@@ -659,6 +659,11 @@
               <FileType>1</FileType>
               <FilePath>..\Utilities\I2C1.c</FilePath>
             </File>
+            <File>
+              <FileName>Wordlifebalance.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Utilities\Wordlifebalance.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

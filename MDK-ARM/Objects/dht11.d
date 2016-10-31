@@ -40,3 +40,14 @@
 .\objects\dht11.o: ..\TM\attributes.h
 .\objects\dht11.o: ..\TM\tm_stm32f4_timer_properties.h
 .\objects\dht11.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\FreeRTOS.h
+.\objects\dht11.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\projdefs.h
+.\objects\dht11.o: ..\FreeRTOS\FreeRTOSConfig.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\portable.h
+.\objects\dht11.o: ..\FreeRTOS\Source\portable\RVDS\ARM_CM4F\portmacro.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\mpu_wrappers.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\queue.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\task.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\list.h
+.\objects\dht11.o: ..\FreeRTOS\Source\include\croutine.h

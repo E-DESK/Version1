@@ -7,6 +7,7 @@
 // Includes
 //--------------------------------------------------------------
 #include "I2C1.h"
+#include "tm_stm32f4_i2c.h"
 
 #define Device_Address_L 	0x46 // Device address when address pin LOW
 #define Device_Address_H 	0x5C // Device address when address pin LOW

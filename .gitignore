@@ -4,3 +4,10 @@ MDK-ARM/Objects/MAIN_BOARD.hex
 MDK-ARM/Objects/MAIN_BOARD_STM32F407.dep
 MDK-ARM/MAIN_BOARD.uvguix.TIDAT
 MDK-ARM/Objects/MAIN_BOARD.htm
+*.__i
+*.o
+*.o
+*.map
+*.o
+MDK-ARM/Objects/arm_pid_init_f32.o
+*.o

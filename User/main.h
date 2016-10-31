@@ -65,10 +65,13 @@
 #include "esp8266.h"
 /*----------  FUZZY  ----------*/
 //#include "fuzzy.h"
+/*----------  WLB  ----------*/
+#include "Wordlifebalance.h"
 /*=====  End of Include module  ======*/
 #include <math.h>
 #include <stdio.h>
 #include "arm_math.h"
+
 
 #define __cplusplus
 
