@@ -3,12 +3,12 @@
 /*Define scope*/
 #define LCD_FUNCs 1
 /*PID*/
-#define PID_PARAM_KP        1         /* Proporcional */
-#define PID_PARAM_KI        10       /* Integral */
-#define PID_PARAM_KD        0          /* Derivative */
+#define PID_PARAM_KP        0.25         /* Proporcional */
+#define PID_PARAM_KI        100       /* Integral */
+#define PID_PARAM_KD        1          /* Derivative */
 #define LIGHT_CURRENT       lights[1]
 #define LIGHT_WANT          lights[0]
-#define LIGHT_WANT_VALUE    150
+#define LIGHT_WANT_VALUE    750
 float lights[2];
 float lightWantValue = LIGHT_WANT_VALUE;
 /*
@@ -81,13 +81,14 @@ static void vDA2_Response  (void *pvParemeters);
 #define ADV_COLOR          BLUE
 #define ADV_BACKGOURND     BLACK
 
-#define ADV_Hour_Con        2      /*Thời gian thích hợp ngồi liên tục*/
+#define ADV_Hour_Con        180      /*Thời gian thích hợp ngồi liên tục*/
 #define ADV_Hour_Day        480       /*Thời gian làm việc 1 ngày*/
-#define ADV_DISTANCE        20
+#define ADV_DISTANCE        30
+#define MAX_DISTANCE        80
+#define MIN_DISTANCE        10
 #define ADV_TAKE_REST       "TAKE A REST, PLS" 
 #define ADV_HAPPY           "WHAT A HAPPY DAY" 
 #define ADV_TOO_HARD        "STOP AND GO OUT." 
-
 
 int mLCD_resetLcd(void);
 int mLCD_showTitle(void);
@@ -105,7 +106,6 @@ struct node * tmpNext;
 
 int tempMinutes = 0;
 int countMinutes =0;
-
 int i=0;
 
 int clearReminder(char rmd[])
@@ -170,19 +170,6 @@ void TM_TIMER_Init(void) {
     TIM_Cmd(TIM2, ENABLE);
 }
 
-
-int senddata(ENVIRONMENT_TYPE _env)
-{
-  sendEsp(IP, PORT, APIKEY, "field1=", _env.AnhSang);
-	vTaskDelay(3000 / portTICK_RATE_MS);
-  //Delayms(3000);
-  sendEsp(IP, PORT, APIKEY, "field2=", _env.DoAmKhi);
-	vTaskDelay(3000 / portTICK_RATE_MS);
-  //Delayms(3000);
-  sendEspPre(IP, PORT, APIKEY, "field3=", _env.NhietDo);
-	vTaskDelay(3000 / portTICK_RATE_MS);
-  return 1;
-}
 
 void TM_PWM_Init(void) {
 	TIM_OCInitTypeDef TIM_OCStruct;
@@ -374,13 +361,14 @@ void sortList()
     for (i = 0; i < size - 1; i++, k--)
     {
         current = head;
-        //long currentCompare;
-        //long nextCompare;
         next = head->next;
         for (j = 1; j < k; j++)
         {
             if (compareTime(current->reminder.reminderTime,next->reminder.reminderTime)==1)
             {
+                //current->next = next->next;
+                //next->next = bf_current->next;
+
                 tempData.reminderText = current->reminder.reminderText;
                 current->reminder.reminderText = next->reminder.reminderText;
                 next->reminder.reminderText = tempData.reminderText;
@@ -421,6 +409,81 @@ bool isListRemindEmpty()
 /*==============================END_LINK_LIST=================================*/
 /**/
 #endif /*LINK LIST*/
+
+/*DHT SIMPLE CODE*/
+//uint16_t read_cycle(uint16_t cur_tics, uint8_t neg_tic)
+//{
+//  uint16_t cnt_tics;
+//  if (cur_tics < MAX_TICS) 
+//  {
+//      cnt_tics = 0;
+//  }
+//  if (neg_tic)
+//      {
+//    while (!GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3)&&(cnt_tics<MAX_TICS)){
+//      cnt_tics++;
+//    }
+//  } else {
+//    while (GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_3)&&(cnt_tics<MAX_TICS)){
+//      cnt_tics++;
+//    }
+//  }
+//  return cnt_tics;
+//}
+
+//uint8_t read_DHT11(uint8_t *buf)
+//{
+//    uint16_t dt[42];
+//    uint16_t cnt;
+//    uint8_t i, check_sum;
+
+//    //reset DHT11
+//    Delay(500);
+//    GPIO_ResetBits(GPIOA,GPIO_Pin_10);
+//    Delay(20);
+//    GPIO_SetBits(GPIOA,GPIO_Pin_10);
+
+//    //start reading
+//    cnt = 0;
+//    for(i=0;i<83 && cnt<MAX_TICS;i++)
+//    {
+//        if (i & 1)
+//        {
+//            cnt = read_cycle(cnt, 1);
+//        } else 
+//        {
+//            cnt = read_cycle(cnt, 0);
+//            dt[i/2]= cnt;
+//        }
+//    }
+
+//  //release line
+//  GPIO_SetBits(GPIOA,GPIO_Pin_10);
+
+//  if (cnt>=MAX_TICS) return DHT11_NO_CONN;
+
+//  //convert data
+//  for(i=2;i<42;i++){
+//    (*buf) <<= 1;
+//     if (dt[i]>20) (*buf)++;
+//     if (!((i-1)%8) && (i>2)) buf++; 
+//  }
+
+//  //calculate checksum
+//  buf -= 5;
+//  check_sum = 0;
+//  for(i=0;i<4;i++){
+//    check_sum += *buf;
+//    buf++;
+//  }
+
+//  if (*buf != check_sum) return DHT11_CS_ERROR;
+
+//  return DHT11_OK;
+//}
+
+
+
 
 float getDistance(uint16_t voltaValue);
 REMINDER parsingLine(char* inputString);
@@ -479,7 +542,7 @@ int initMain(int flag)
         I2C1_Init();
         /*I2C1_PINS PACK 2
         SCL=PB8_SDA=PB9  */
-        //BH1750_Init();
+        BH1750_Init();
 
         DHT_GetTemHumi();
         
@@ -488,6 +551,7 @@ int initMain(int flag)
         TM_ADC_Init(ADC1,ADC_Channel_0);
 
         TM_USART_Init(USART6, TM_USART_PinsPack_1, 9600);
+        
         //TM_USART_Init(USART2, TM_USART_PinsPack_2, 9600);
         TM_USART_SetCustomStringEndCharacter(USART6,'.');
         
@@ -532,7 +596,7 @@ int initMain(int flag)
 
         
         /*PWM and PID*/
-        if(0)
+        if(1)
         {
 
         /* Set PID parameters */
@@ -551,14 +615,14 @@ int initMain(int flag)
         //TM_TIMER_Init();
         /* Init PWM */
         //TM_PWM_Init();
-        TM_PWM_InitTimer(TIM2, &TIM_Data, 8399);
+        TM_PWM_InitTimer(TIM2, &TIM_Data, 10000);
 
         /* Initialize TIM2, Channel 1, PinsPack 2 = PA5 */
         TM_PWM_InitChannel(TIM2, TM_PWM_Channel_1, TM_PWM_PinsPack_2);
 
         /* Set default duty cycle */
         TM_PWM_SetChannelPercent(TIM1, &TIM_Data, TM_PWM_Channel_1, duty);
-        //TM_PWM_SetChannelMicros(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
+        TM_PWM_SetChannelMicros(TIM2, &TIM_Data, TM_PWM_Channel_1, duty);
         }
         
         userData.uD_distance = 0;
@@ -585,7 +649,7 @@ static void vDA2_ReadSensor(void *pvParameters)
 {
     for(;;)
     {
-        vTaskDelay( 100 / portTICK_RATE_MS );
+        vTaskDelay( 20 / portTICK_RATE_MS );
         DHT_GetTemHumi();
         InRoomEvn.AnhSang = BH1750_Read();
         InRoomEvn.DoAmKhi = DHT_doam();
@@ -604,7 +668,7 @@ static void vDA2_ReadSensor(void *pvParameters)
         if(!TM_USART_BufferEmpty(USART6))
         {
             newRemindFlag = 1;
-             TM_DISCO_LedToggle(LED_ORANGE);
+            TM_DISCO_LedToggle(LED_ORANGE);
         }
         //if(CrTime.minutes%2==0)
         //{
@@ -619,7 +683,6 @@ static void vDA2_ShowLCD(void *pvParameters)
     for(;;)
     {
         vTaskDelay( 250 / portTICK_RATE_MS );
-       
         mLCD_showSensor();
         mLCD_showDateTime();
     }
@@ -628,51 +691,38 @@ static void vDA2_ShowLCD(void *pvParameters)
 static void vDA2_Response(void *pvParameters)
 {
     int tempSecond = CrTime.seconds;
+    TM_DISCO_LedToggle(LED_GREEN);
     for(;;)
     {
 /*====================================================================================================================*/
 /*                                                             PID                                                    */
 /*====================================================================================================================*/
         /* Calculate error */
-//        LIGHT_CURRENT = InRoomEvn.AnhSang;
-//        LIGHT_WANT = lightWantValue;
+        LIGHT_CURRENT = InRoomEvn.AnhSang;
+        LIGHT_WANT = lightWantValue;
 //        pid_error = LIGHT_WANT - LIGHT_CURRENT;
-////        int pastDuty = duty;
-////        if(pid_error >=0)
-////        {
+        
+        if(LIGHT_CURRENT < LIGHT_WANT)
+        {
+            duty++;
+        }
+        else if(LIGHT_CURRENT >= LIGHT_WANT+50)
+        {
+            duty--;
+        }
+
 //            /* Calculate PID here, argument is error */
 //            /* Output data will be returned, we will use it as duty cycle parameter */
-//            //currentDuty = duty;
-//            duty = arm_pid_f32(&PID, pid_error)/1000;
+//            duty = arm_pid_f32(&PID, pid_error)/1024;
+//            i =duty;
 //            /* Check overflow, duty cycle in percent */
-//            if (duty > 100) {
-//            duty = 100;
-//            } else if (duty < 0) {
-//            duty = 0;
-//            }
+            if (duty > 100) {
+            duty = 100;
+            } else if (duty < 0) {
+            duty = 0;
+            }
 //            pastDuty = duty;
-//        }
-//        else
-//        {
-//            pid_error = pid_error * (-1);
-//             duty = arm_pid_f32(&PID, pid_error);
-//            /* Check overflow, duty cycle in percent */
-//            /**/
-//            duty = duty - pastDuty;
-//            if (duty > 100) {
-//            duty = 100;
-//            } else if (duty < 0) {
-//            duty = 0;
-//            }
-//            pastDuty = duty;
-//        }
-//        i++;
-//            if(i==100)
-//                {
-//                    i=0;
-//                } 
-// //vTaskDelay(1000 / portTICK_RATE_MS );                
-//        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, i);
+        TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, 100 - duty);
 
 /*====================================================================================================================*/
 /*                                               XỬ lÝ ẢNH HƯỞNG SỨC KHỎE                                             */
@@ -732,7 +782,9 @@ float getDistance(uint16_t voltaValue)
 {
     float volts = voltaValue*0.0048828125;
     // value from sensor * (5/1024) - if running 3.3.volts then change 5 to 3.3
-    float distance = 320*pow(volts, -1.10);
+    float distance = 250*pow(volts, -1.10);
+    if(distance < 0 || distance > 80)
+        distance =-1;
     return distance;
 }
 
@@ -767,7 +819,10 @@ REMINDER parsingLine(char* inputString)
     if(pch!=NULL)
     {
         tempNoteType.reminderTime.hours = atoi(pch);
-        
+        if(tempNoteType.reminderTime.hours > 24 && tempNoteType.reminderTime.hours <0)
+        {
+            goto EXIT;
+        }
         pch = strtok (NULL," ");
         tempNoteType.reminderTime.minutes = atoi(pch);
         
@@ -786,7 +841,8 @@ REMINDER parsingLine(char* inputString)
         //copy_string(tempNoteType.reminderText,pch);
         
         strcpy(tempNoteType.reminderText,pch);
-        
+       EXIT:
+       Delayms(1);
         //free(tempNoteType.reminderText);
     }
     return tempNoteType;
@@ -856,7 +912,7 @@ int mLCD_showSensor()
             LCD_SetBackColor(INFO_BACKGOURND);
             LCD_SetTextColor(NOTE_COLOR);
             /*LATED*/
-            LCD_SetColors(DGRAY,BLACK);
+            LCD_SetColors(DGREEN,BLACK);
             LCD_CharSize(12);
             LCD_Clear_P(BLACK,LATED_Y,LATED_X - 60,3040);
             sprintf(sbuff,"<%d:%d %d-%d-%d>%s",
@@ -934,7 +990,7 @@ int mLCD_ShowListRemind()
     LCD_SetTextColor(NOTE_COLOR);
     LCD_CharSize(NOTE_SIZE);
     LCD_Clear_P(BLACK,NOTE_Y,NOTE_X- 40, 3768);
-    LCD_Clear_P(BLACK,NOTE_Y+12,NOTE_X+8, 3840);
+    LCD_Clear_P(BLACK,NOTE_Y+12,NOTE_X+8, 5200);
     sprintf(sbuff,"<%d:%d %d-%d-%d> %s",
     _current->reminder.reminderTime.hours,
     _current->reminder.reminderTime.minutes,
