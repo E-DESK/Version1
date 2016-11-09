@@ -66,7 +66,7 @@
 /*----------  FUZZY  ----------*/
 //#include "fuzzy.h"
 /*----------  WLB  ----------*/
-#include "Wordlifebalance.h"
+//#include "Wordlifebalance.h"
 /*=====  End of Include module  ======*/
 #include <math.h>
 #include <stdio.h>
@@ -111,7 +111,9 @@ struct UserData_Struct
     uint16_t            uD_hisTime_Day;
     uint8_t             uD_isSitting;
     TM_DS1307_Time_t    uD_StartTime;
-    uint8_t             uD_restFlag;
+    uint8_t             uD_restFlag;/*0=>ok, 1=>takerest, 2=> overtime*/
+    float               uD_enviRatio;
+    float               uD_workRaito;
 };
 typedef struct UserData_Struct USERDATA_TYPE;
 
@@ -131,6 +133,7 @@ float pushPresDownArray(float pushValue);
 uint8_t LCD_showDateTime(uint8_t mode);
 int LCD_showUpdate(int mode);
 int mLCD_storeChuoi(void);
+
 #endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

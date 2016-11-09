@@ -1,21 +1,22 @@
 #include "main.h"
 #define __cplusplus
 /*Define scope*/
-#define LCD_FUNCs 1
+#define LCD_FUNCs           1
+#define RESPONSE_FUNCs      1
+#define STRING_FUNCs        1
 /*PID*/
-#define PID_PARAM_KP        0.25         /* Proporcional */
-#define PID_PARAM_KI        100       /* Integral */
+#define PID_PARAM_KP        5         /* Proporcional */
+#define PID_PARAM_KI        10       /* Integral */
 #define PID_PARAM_KD        1          /* Derivative */
 #define LIGHT_CURRENT       lights[1]
 #define LIGHT_WANT          lights[0]
-#define LIGHT_WANT_VALUE    750
+#define LIGHT_WANT_VALUE    1000
 float lights[2];
 float lightWantValue = LIGHT_WANT_VALUE;
 /*
 RTOS TASK
 */
-#define STACK_SIZE_MIN 128 /* usStackDepth	- the stack size DEFINED IN \
-                              WORDS.*/
+#define STACK_SIZE_MIN 128 /* usStackDepth	- the stack size DEFINED IN WORDS.*/
 uint8_t light;
 
 /*xTaskHandle*/
@@ -81,8 +82,8 @@ static void vDA2_Response  (void *pvParemeters);
 #define ADV_COLOR          BLUE
 #define ADV_BACKGOURND     BLACK
 
-#define ADV_Hour_Con        180      /*Thời gian thích hợp ngồi liên tục*/
-#define ADV_Hour_Day        480       /*Thời gian làm việc 1 ngày*/
+#define ADV_Hour_Con        3//30      /*Thời gian thích hợp ngồi liên tục*/
+#define ADV_Hour_Day        15//480       /*Thời gian làm việc 1 ngày*/
 #define ADV_DISTANCE        30
 #define MAX_DISTANCE        80
 #define MIN_DISTANCE        10
@@ -97,6 +98,9 @@ int mLCD_showDate(void);
 int mLCD_showSensor(void);
 int mLCD_ShowListRemind(void);
 int mLCD_RS(void);
+
+int mResponse_Distance(void);
+int mResponse_LomgTime(void);
 /*REMINDER*/
 #define MAX_STRING_REMINDER 100
 char reminder[MAX_STRING_REMINDER]={0};
@@ -107,7 +111,11 @@ struct node * tmpNext;
 int tempMinutes = 0;
 int countMinutes =0;
 int i=0;
-
+int tempSecond =0;
+    uint8_t tempFlag = 0;
+    uint8_t counter5 = 0;
+    uint8_t tempTime = 0;
+    uint8_t tempDay  = 0;
 int clearReminder(char rmd[])
 {
     for(int i=0; i < MAX_STRING_REMINDER ;i++)
@@ -410,7 +418,7 @@ bool isListRemindEmpty()
 /**/
 #endif /*LINK LIST*/
 
-/*DHT SIMPLE CODE*/
+#if 0/*DHT SIMPLE CODE*/
 //uint16_t read_cycle(uint16_t cur_tics, uint8_t neg_tic)
 //{
 //  uint16_t cnt_tics;
@@ -482,7 +490,7 @@ bool isListRemindEmpty()
 //  return DHT11_OK;
 //}
 
-
+#endif
 
 
 float getDistance(uint16_t voltaValue);
@@ -587,7 +595,7 @@ int initMain(int flag)
         CrTime.year += 2000;
         //mLCD_resetLcd();
         mLCD_showDate();
-        
+        tempDay = CrTime.date;
         LCD_Clear(BLACK);
         mLCD_showTitle();
         InRoomEvn.AnhSang = 0;
@@ -630,9 +638,13 @@ int initMain(int flag)
         userData.uD_hisTime_Day =0;
         userData.uD_isSitting =0;
         
-        LCD_SetDisplayWindow(0, 0, 238, 318);
+        LCD_SetColors(ADV_COLOR,ADV_BACKGOURND);
+        LCD_CharSize(ADV_SIZE);
+        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_HAPPY);
+        TM_USART_Puts(USART6,"LET'S WORK.\r\n");
+        mLCD_RS();
         
-        //setEsp(ESP_USART,ESP_PINPACK,ESP_BAUDRATE);
+        LCD_SetDisplayWindow(0, 0, 238, 318);
     }
     return 1;
 }
@@ -640,8 +652,9 @@ int initMain(int flag)
 int initTask()
 {
     xTaskCreate(vDA2_ReadSensor,(const signed char*)"vDA2_ReadSensor",STACK_SIZE_MIN,NULL,tskIDLE_PRIORITY+3,&ptr_readSensor);
-    xTaskCreate(vDA2_ShowLCD, (const signed char *)"vDA2_ShowLCD", STACK_SIZE_MIN+384,NULL, tskIDLE_PRIORITY+1,&ptr_showLCD);
     xTaskCreate(vDA2_Response, (const signed char *)"vDA2_Response", STACK_SIZE_MIN,NULL, tskIDLE_PRIORITY+2,&ptr_response);
+    xTaskCreate(vDA2_ShowLCD, (const signed char *)"vDA2_ShowLCD", STACK_SIZE_MIN+384,NULL, tskIDLE_PRIORITY+1,&ptr_showLCD);
+
     return 1;
 }
 
@@ -649,7 +662,7 @@ static void vDA2_ReadSensor(void *pvParameters)
 {
     for(;;)
     {
-        vTaskDelay( 20 / portTICK_RATE_MS );
+        vTaskDelay(150 / portTICK_RATE_MS );
         DHT_GetTemHumi();
         InRoomEvn.AnhSang = BH1750_Read();
         InRoomEvn.DoAmKhi = DHT_doam();
@@ -682,7 +695,7 @@ static void vDA2_ShowLCD(void *pvParameters)
 {
     for(;;)
     {
-        vTaskDelay( 250 / portTICK_RATE_MS );
+        //vTaskDelay( 100 / portTICK_RATE_MS );
         mLCD_showSensor();
         mLCD_showDateTime();
     }
@@ -690,8 +703,6 @@ static void vDA2_ShowLCD(void *pvParameters)
 
 static void vDA2_Response(void *pvParameters)
 {
-    int tempSecond = CrTime.seconds;
-    TM_DISCO_LedToggle(LED_GREEN);
     for(;;)
     {
 /*====================================================================================================================*/
@@ -700,70 +711,41 @@ static void vDA2_Response(void *pvParameters)
         /* Calculate error */
         LIGHT_CURRENT = InRoomEvn.AnhSang;
         LIGHT_WANT = lightWantValue;
-//        pid_error = LIGHT_WANT - LIGHT_CURRENT;
+        pid_error = LIGHT_WANT - LIGHT_CURRENT;
+        if(pid_error > 1000){
+            pid_error =1000;
+        }else if (pid_error <-1000){
+            pid_error =-1000;
+        }
         
-        if(LIGHT_CURRENT < LIGHT_WANT)
-        {
-            duty++;
-        }
-        else if(LIGHT_CURRENT >= LIGHT_WANT+50)
-        {
-            duty--;
-        }
+
+//        if(LIGHT_CURRENT < LIGHT_WANT)
+//        {
+//            duty++;
+//        }
+//        else if(LIGHT_CURRENT > LIGHT_WANT+40)
+//        {
+//            duty--;
+//        }
 
 //            /* Calculate PID here, argument is error */
 //            /* Output data will be returned, we will use it as duty cycle parameter */
-//            duty = arm_pid_f32(&PID, pid_error)/1024;
+        duty = arm_pid_f32(&PID, pid_error)/1024;
 //            i =duty;
 //            /* Check overflow, duty cycle in percent */
-            if (duty > 100) {
-            duty = 100;
-            } else if (duty < 0) {
-            duty = 0;
-            }
+        if (duty > 100) {
+        duty = 100;
+        } else if (duty < 0) {
+        duty = 0;
+        }
 //            pastDuty = duty;
         TM_PWM_SetChannelPercent(TIM2, &TIM_Data, TM_PWM_Channel_1, 100 - duty);
 
 /*====================================================================================================================*/
 /*                                               XỬ lÝ ẢNH HƯỞNG SỨC KHỎE                                             */
 /*====================================================================================================================*/
-        if((userData.uD_distance < ADV_DISTANCE) && (userData.uD_distance >10))
-        /*Nếu khoảng cách nhỏ hơn ADV_DISTANCE*/
-        {
-            /*=====YES=====*/
-            if(userData.uD_isSitting)
-            /*Nếu mà đang ngồi*/
-            {
-                if(tempSecond!=CrTime.seconds)
-                {
-                /*Thời gian ngồi liên tục  = CrTime - Thời gian bắt đầu*/
-                    userData.uD_hisTime_Con++;
-                    userData.uD_hisTime_Day++;
-                    tempSecond = CrTime.seconds;
-                //userData.uD_hisTime_Con = (CrTime.minutes - userData.uD_StartTime.minutes)*60+(CrTime.seconds - userData.uD_StartTime.seconds);
-                //userData.uD_hisTime_Day = tempTDay + userData.uD_hisTime_Con;
-                }
-            }
-            else
-            /*Không phải là đang ngồi*/
-            {
-                /*isSitting =1*/
-                userData.uD_isSitting = 1;
-                /*Thời gian bắt đầu = CrTime*/
-                userData.uD_StartTime.hours = CrTime.hours;
-                userData.uD_StartTime.minutes = CrTime.minutes;
-                userData.uD_StartTime.seconds = CrTime.seconds;
-            }
-        }
-        else
-        {
-            /*=====NO=====*/
-            /*Ngồi liên tục = 0*/
-            //userData.uD_hisTime_Day += userData.uD_hisTime_Con;
-            userData.uD_hisTime_Con = 0;
-            /*Đang ngồi = 0*/
-            userData.uD_isSitting =0;
-        }
+    mResponse_Distance();
+    mResponse_LomgTime();
 ///*====================================================================================================================*/
 ///*                                               REMINDER                                                             */
 ///*====================================================================================================================*/
@@ -778,6 +760,7 @@ static void vDA2_Response(void *pvParameters)
 
 }
 
+#if STRING_FUNCs
 float getDistance(uint16_t voltaValue)
 {
     float volts = voltaValue*0.0048828125;
@@ -847,6 +830,8 @@ REMINDER parsingLine(char* inputString)
     }
     return tempNoteType;
 }
+#endif /*END STRING FUNCTIONs*/
+
 #if LCD_FUNCs
 /*LCD FUNCTIONS*/
 int mLCD_RS()
@@ -871,6 +856,7 @@ int mLCD_writeLine(uint16_t posY, uint16_t posX, int range, uint16_t color, uint
 int mLCD_showSensor()
 {
     mLCD_RS();
+
     LCD_SetBackColor(INFO_BACKGOURND);
     LCD_SetTextColor(INFO_COLOR);
     LCD_CharSize(16);
@@ -956,28 +942,59 @@ int mLCD_showSensor()
         mLCD_ShowListRemind();
     }
     
-    /*Hiển thị LCD*/
-    LCD_SetColors(ADV_COLOR,ADV_BACKGOURND);
-    LCD_CharSize(ADV_SIZE);
-    //LCD_Clear_P(BLACK,ADV_Y,ADV_X+12,ADV_RANGE);
-    if((userData.uD_hisTime_Con == ADV_Hour_Con)
-     ||(userData.uD_hisTime_Con == ADV_Hour_Con-1))
-    /*Nếu mà ngồi liên tục > 2h*/
+    if(tempFlag != userData.uD_restFlag)
     {
-        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TAKE_REST);
-        TM_USART_Puts(USART6,"ADV_TAKE_REST \r\n");
+        switch (userData.uD_restFlag)
+        {
+            case 0:
+                LCD_SetColors(ADV_COLOR,ADV_BACKGOURND);
+                LCD_CharSize(ADV_SIZE);
+                LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_HAPPY);
+                TM_USART_Puts(USART6,"LET'S WORK.\r\n");
+                mLCD_RS();
+                break;
+            case 1:
+                LCD_SetColors(ADV_COLOR,ADV_BACKGOURND);
+                LCD_CharSize(ADV_SIZE);
+                LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TAKE_REST);
+                TM_USART_Puts(USART6,"LET'S HAVE A SMALL REST.\r\n");
+                mLCD_RS();
+                break;
+            case 2:
+                LCD_SetColors(ADV_COLOR,ADV_BACKGOURND);
+                LCD_CharSize(ADV_SIZE);
+                LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TOO_HARD);
+                TM_USART_Puts(USART6,"LET'S GO OUT AND SAVE THE WORLD.\r\n");
+                mLCD_RS();
+                break;
+                break;
+            default:
+                break;
+        }
+        tempFlag = userData.uD_restFlag;
     }
-    else if(userData.uD_hisTime_Day == ADV_Hour_Day)
-    {
-        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TOO_HARD);
-        TM_USART_Puts(USART6,"ADV_TOO_HARD \r\n");
-    }
-    else
-    {
-        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_HAPPY);
-        //TM_USART_Puts(USART6,"ADV_HAPPY \r\n");
-    }
-    mLCD_RS();
+//    /*Hiển thị LCD*/
+//    LCD_SetColors(ADV_COLOR,ADV_BACKGOURND);
+//    LCD_CharSize(ADV_SIZE);
+//    //LCD_Clear_P(BLACK,ADV_Y,ADV_X+12,ADV_RANGE);
+//    if((userData.uD_hisTime_Con == ADV_Hour_Con)
+//     ||(userData.uD_hisTime_Con == ADV_Hour_Con-1))
+//    /*Nếu mà ngồi liên tục > 2h*/
+//    {
+//        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TAKE_REST);
+//        TM_USART_Puts(USART6,"ADV_TAKE_REST \r\n");
+//    }
+//    else if(userData.uD_hisTime_Day == ADV_Hour_Day)
+//    {
+//        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_TOO_HARD);
+//        TM_USART_Puts(USART6,"ADV_TOO_HARD \r\n");
+//    }
+//    else
+//    {
+//        LCD_StringLine(ADV_Y,ADV_X,(uint8_t*)ADV_HAPPY);
+//        //TM_USART_Puts(USART6,"ADV_HAPPY \r\n");
+//    }
+    //mLCD_RS();
     return 1;
 }
 
@@ -1082,6 +1099,96 @@ int mLCD_showTitle()
     LCD_StringLine(LATED_Y, LATED_X, (uint8_t *)"LATED:");
     LCD_StringLine(LATED_Y+12, LATED_X, (uint8_t *)"NOTES:");
     mLCD_RS();
+    return 1;
+}
+#endif
+
+
+#if RESPONSE_FUNCs
+int mResponse_Distance()
+{
+    if((userData.uD_distance < ADV_DISTANCE) && (userData.uD_distance >10))
+    /*Nếu khoảng cách nhỏ hơn ADV_DISTANCE*/
+    {
+        /*=====YES=====*/
+        if(userData.uD_isSitting)
+        /*Nếu mà đang ngồi*/
+        {
+            if(tempSecond!=CrTime.seconds)
+            {
+                /*Thời gian ngồi liên tục  = CrTime - Thời gian bắt đầu*/
+                userData.uD_hisTime_Con++;
+                userData.uD_hisTime_Day++;
+                tempSecond = CrTime.seconds;
+            }
+        }
+        else
+        /*Không phải là đang ngồi*/
+        {
+            /*isSitting =1*/
+            userData.uD_isSitting = 1;
+            /*Thời gian bắt đầu = CrTime*/
+            userData.uD_StartTime.hours = CrTime.hours;
+            userData.uD_StartTime.minutes = CrTime.minutes;
+            userData.uD_StartTime.seconds = CrTime.seconds;
+        }
+    }
+    else
+    {
+        /*=====NO=====*/
+        /*Ngồi liên tục = 0*/
+        //userData.uD_hisTime_Day += userData.uD_hisTime_Con;
+        userData.uD_hisTime_Con = 0;
+        /*Đang ngồi = 0*/
+        userData.uD_isSitting =0;
+    }
+    return 1;
+}
+
+int mResponse_LomgTime()
+{
+    
+    uint8_t tempSwitch = userData.uD_restFlag;
+
+    //uint8_t tempDay = 0;
+    switch (tempSwitch)
+    {
+        case 0:
+            if(userData.uD_hisTime_Con == ADV_Hour_Con)
+            {
+                userData.uD_restFlag = 1;
+            }
+            if(userData.uD_hisTime_Day >= ADV_Hour_Day)
+            {
+                userData.uD_restFlag = 2;
+            }
+            
+            break;
+        case 1:
+            if(userData.uD_hisTime_Con == 0)
+            {
+                if(CrTime.seconds != tempTime)
+                {
+                    counter5++;
+                    tempTime = CrTime.seconds;
+                    if(counter5 == 10)
+                    {
+                        userData.uD_restFlag = 0;
+                        counter5 = 0;
+                    }
+                }
+            }
+            break;
+        case 2:
+            if( tempDay != CrTime.date )
+            {
+                userData.uD_restFlag = 0;
+            }
+            break;
+        default:
+            break;
+    }
+    
     return 1;
 }
 #endif
